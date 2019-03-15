@@ -1,0 +1,11 @@
+*.db
+*.egg-info
+*.pyc
+__pycache__
+/build
+/dist
+/pyenv
+/venv
+/.idea
+/.cache
+/.coverage

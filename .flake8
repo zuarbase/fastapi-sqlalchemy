@@ -1,0 +1,9 @@
+[flake8]
+max-line-length = 80
+inline-quotes = "
+exclude = .git,node_modules,__init__.py,DEBIAN
+ignore = 
+# too many leading '#' for block comment
+  E266,
+# comparison to None should be 'if cond is not None:'
+  E711
