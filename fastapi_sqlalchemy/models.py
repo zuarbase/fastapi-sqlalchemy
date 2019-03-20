@@ -1,8 +1,12 @@
 """ SQLAlchemy helper function """
+import json
 import uuid
 import enum
 
 import sqlalchemy
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.sql import operators
+from sqlalchemy.types import TEXT
 from sqlalchemy.inspection import inspect
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import (
@@ -19,11 +23,17 @@ class Base:
     """ Custom declarative base """
 
     def as_dict(self):
-        """ Make the protected method public """
-        # pylint: disable=no-member
+        """ Convert object to dictionary """
         result = {}
-        for key, obj in inspect(self).attrs.items():
-            result[key] = obj.value
+        for attr in sqlalchemy.inspect(self).mapper.column_attrs:
+            value = getattr(self, attr.key)
+            if isinstance(value, (tz.datetime, tz.date)):
+                value = value.isoformat()
+            elif isinstance(value, uuid.UUID):
+                value = str(value)
+            elif isinstance(value, enum.Enum):
+                value = value.name
+            result[attr.key] = value
         return result
 
 
@@ -136,3 +146,37 @@ class DictMixin:
                 value = value.name
             result[attr.key] = value
         return result
+
+
+class JSONEncodedDict(TypeDecorator):
+    """Represents an immutable structure as a json-encoded string.
+    """
+
+    impl = TEXT
+
+    def coerce_compared_value(self, op, value):
+        if op in (operators.like_op, operators.notlike_op):
+            return sqlalchemy.String()
+        return self
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            value = json.dumps(value)
+
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = json.loads(value)
+        return value
+
+    def process_literal_param(self, value, dialect):
+        """ see sqlalchemy.types.TypeDecorator.process_literal_param """
+        raise NotImplementedError()
+
+    def python_type(self):
+        """ see sqlalchemy.types.TypeDecorator.process_literal_param """
+        raise NotImplementedError()
+
+
+JSON_TYPE = MutableDict.as_mutable(JSONEncodedDict)

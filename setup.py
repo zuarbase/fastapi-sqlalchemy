@@ -8,6 +8,7 @@ setup(
     version=VERSION,
     packages=["fastapi_sqlalchemy"],
     install_requires=[
+        "email-validator",
         "fastapi",
         "python-dateutil",
         "sqlalchemy",
