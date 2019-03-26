@@ -1,4 +1,4 @@
-all: flake8 pylint tests
+all: flake8 pylint test
 
 flake8: flake8_pkg flake8_tests
 .PHONY: flake8
@@ -22,6 +22,6 @@ pylint_tests:
 	pylint tests  --disable=missing-docstring
 .PHONY: pylint_tests
 
-tests:
-	pytest -vv tests
+test:
+	pytest -xvv tests
 .PHONY: tests

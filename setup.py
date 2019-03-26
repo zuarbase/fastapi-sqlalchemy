@@ -10,6 +10,7 @@ setup(
     install_requires=[
         "email-validator",
         "fastapi",
+        "passlib",
         "python-dateutil",
         "sqlalchemy",
         "sqlalchemy-filters",

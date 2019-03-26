@@ -1,44 +1,13 @@
-""" SQLAlchemy helper function """
-import json
+""" SQLAlchemy types - particularly for columns """
 import uuid
-import enum
+import json
 
 import sqlalchemy
 from sqlalchemy.ext.mutable import MutableDict
+
 from sqlalchemy.sql import operators
-from sqlalchemy.types import TEXT
-from sqlalchemy.inspection import inspect
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.orm import (
-    scoped_session,
-    sessionmaker,
-)
-from sqlalchemy.types import TypeDecorator, CHAR
+from sqlalchemy.types import TypeDecorator, CHAR, TEXT
 from sqlalchemy.dialects.postgresql import UUID
-
-from . import tz
-
-
-class Base:
-    """ Custom declarative base """
-
-    def as_dict(self):
-        """ Convert object to dictionary """
-        result = {}
-        for attr in sqlalchemy.inspect(self).mapper.column_attrs:
-            value = getattr(self, attr.key)
-            if isinstance(value, (tz.datetime, tz.date)):
-                value = value.isoformat()
-            elif isinstance(value, uuid.UUID):
-                value = str(value)
-            elif isinstance(value, enum.Enum):
-                value = value.name
-            result[attr.key] = value
-        return result
-
-
-BASE = declarative_base(cls=Base)
-Session = scoped_session(sessionmaker())
 
 
 class GUID(TypeDecorator):
@@ -88,64 +57,6 @@ class GUID(TypeDecorator):
     def python_type(self):
         """ see sqlalchemy.types.TypeDecorator.process_literal_param """
         raise NotImplementedError()
-
-
-class GuidMixin:
-    """ Mixin that add a UUID id column """
-    id = sqlalchemy.Column(
-        GUID,
-        primary_key=True,
-        default=uuid.uuid4,
-    )
-
-
-class TimestampMixin:
-    """ Mixin to add update_at and created_at columns
-
-    The columns are added at the *end* of the table
-    """
-    @declared_attr
-    def updated_at(self):
-        """ Last update timestamp """
-        column = sqlalchemy.Column(
-            sqlalchemy.DateTime(timezone=True),
-            default=tz.utcnow,
-            onupdate=tz.utcnow,
-            nullable=False,
-        )
-        # pylint: disable=protected-access
-        column._creation_order = 9800
-        return column
-
-    @declared_attr
-    def created_at(self):
-        """ Creation timestamp """
-        column = sqlalchemy.Column(
-            sqlalchemy.DateTime(timezone=True),
-            default=tz.utcnow,
-            onupdate=tz.utcnow,
-            nullable=False,
-        )
-        # pylint: disable=protected-access
-        column._creation_order = 9900
-        return column
-
-
-class DictMixin:
-    """ Mixin to add as_dict() """
-    def as_dict(self):
-        """ Convert object to dictionary """
-        result = {}
-        for attr in sqlalchemy.inspect(self).mapper.column_attrs:
-            value = getattr(self, attr.key)
-            if isinstance(value, (tz.datetime, tz.date)):
-                value = value.isoformat()
-            elif isinstance(value, uuid.UUID):
-                value = str(value)
-            elif isinstance(value, enum.Enum):
-                value = value.name
-            result[attr.key] = value
-        return result
 
 
 class JSONEncodedDict(TypeDecorator):
