@@ -50,4 +50,8 @@ def session_fixture(engine):
     models.BASE.metadata.create_all(engine)
     yield models.Session()
     models.Session.remove()
+
+    # FIXME: clear all models after each run
+    # models.BASE.metadata.clear()
+    # models.base.MODEL_MAPPING.clear()
     _drop_all()

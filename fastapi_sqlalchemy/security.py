@@ -21,7 +21,7 @@ async def read_scopes(
 
 class TrustedScope(Depends):
     """ scope-based authorization """
-    def __init__(self, header_name=SCOPE_HEADER_NAME):
+    def __init__(self):
         super().__init__(read_scopes)
 
 

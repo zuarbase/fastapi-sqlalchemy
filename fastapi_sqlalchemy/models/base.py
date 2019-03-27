@@ -49,10 +49,11 @@ class ModelMapping(dict):
 
     def update(self, other=None, **kwargs):
         if other is not None:
-            for k, v in other.items() if isinstance(other, Mapping) else other:
-                self[k] = v
-        for k, v in kwargs.items():
-            self[k] = v
+            for key, value in other.items() \
+                    if isinstance(other, Mapping) else other:
+                self[key] = value
+        for key, value in kwargs.items():
+            self[key] = value
 
 
 MODEL_MAPPING = ModelMapping()

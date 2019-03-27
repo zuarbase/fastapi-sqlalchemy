@@ -12,6 +12,8 @@ setup(
         "fastapi",
         "passlib",
         "python-dateutil",
+        "python-multipart",
+        "pyjwt",
         "sqlalchemy",
         "sqlalchemy-filters",
         "tzlocal"

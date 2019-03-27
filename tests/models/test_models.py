@@ -1,5 +1,6 @@
-from fastapi_sqlalchemy import models
 from fastapi_sqlalchemy.models.base import MODEL_MAPPING
+
+from fastapi_sqlalchemy import models
 
 
 class User(models.User):
@@ -20,7 +21,6 @@ models.create_group_permissions_table()
 
 
 def _create_all(engine, session):
-    models.BASE.metadata.create_all(engine)
 
     alice = User(username="alice")
     assert MODEL_MAPPING["User"] == User

@@ -7,6 +7,7 @@ from .base import BASE, MODEL_MAPPING, Session
 
 @event.listens_for(mapper, "after_configured")
 def _after_configured():
+    # pylint: disable=too-many-branches
     user_cls = MODEL_MAPPING.get("User")
     group_cls = MODEL_MAPPING.get("Group")
     permission_cls = MODEL_MAPPING.get("Permission")

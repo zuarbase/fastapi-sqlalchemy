@@ -33,6 +33,7 @@ class User(BASE, mixins.GuidMixin, mixins.TimestampMixin):
             _key: str,
             value: str
     ) -> str:
+        # pylint: disable=no-self-use
         return value.lower()
 
     def verify(
