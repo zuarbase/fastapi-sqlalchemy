@@ -27,7 +27,7 @@ class User(BASE, mixins.GuidMixin, mixins.TimestampMixin):
         nullable=True,
     )
 
-    @validates("name")
+    @validates("username")
     def _set_name(
             self,
             _key: str,
@@ -65,11 +65,14 @@ class User(BASE, mixins.GuidMixin, mixins.TimestampMixin):
     @classmethod
     def get_by_username(
             cls,
-            name: str
+            name: str,
+            session: Session = None
     ):
         """ Lookup a group by name
         """
-        return Session.query(cls).filter(cls.username == name).first()
+        if not session:
+            session = Session()
+        return session.query(cls).filter(cls.username == name).first()
 
 
 @event.listens_for(User, "mapper_configured", propagate=True)

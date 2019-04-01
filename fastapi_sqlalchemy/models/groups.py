@@ -19,7 +19,8 @@ class Group(BASE, mixins.GuidMixin, mixins.TimestampMixin):
     @classmethod
     def get_by_name(
             cls,
-            name: str
+            name: str,
+            session: Session = None
     ):
         """ Lookup a group by name
         """
