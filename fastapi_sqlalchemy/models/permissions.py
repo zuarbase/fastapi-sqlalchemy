@@ -19,11 +19,14 @@ class Permission(BASE, mixins.GuidMixin, mixins.TimestampMixin):
     @classmethod
     def get_by_name(
             cls,
-            name: str
+            name: str,
+            session: Session = None
     ):
         """ Lookup a group by name
         """
-        return Session.query(cls).filter(cls.name == name).first()
+        if session is None:
+            session = Session()
+        return session.query(cls).filter(cls.name == name).first()
 
 
 @event.listens_for(Permission, "mapper_configured", propagate=True)
