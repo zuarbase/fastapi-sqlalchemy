@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 PACKAGE = "fastapi-sqlalchemy"
 VERSION = "0.1.1"
@@ -6,7 +6,7 @@ VERSION = "0.1.1"
 setup(
     name=PACKAGE,
     version=VERSION,
-    packages=["fastapi_sqlalchemy"],
+    packages=find_packages(exclude=["tests"]),
     install_requires=[
         "email-validator",
         "fastapi",
