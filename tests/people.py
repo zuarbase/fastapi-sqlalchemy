@@ -1,4 +1,7 @@
 """ Generic test data """
+from datetime import datetime
+from uuid import UUID
+
 import sqlalchemy
 from sqlalchemy.types import CHAR
 from pydantic import BaseModel, constr, PositiveInt
@@ -44,6 +47,12 @@ class PersonRequestModel(BaseModel):
     order: int
     gender: constr(min_length=1, max_length=1)
     age: PositiveInt
+
+
+class PersonResponseModel(PersonRequestModel):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
 
 
 def load_people():

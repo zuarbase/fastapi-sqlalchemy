@@ -4,15 +4,15 @@ from fastapi_sqlalchemy import models
 
 
 class User(models.User):
-    __abstract__ = False
+    pass
 
 
 class Group(models.Group):
-    __abstract__ = False
+    pass
 
 
 class Permission(models.Permission):
-    __abstract__ = False
+    pass
 
 
 models.create_group_membership_table()

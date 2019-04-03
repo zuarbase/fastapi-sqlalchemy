@@ -2,6 +2,7 @@
 from uuid import UUID
 from typing import List, Dict, Any
 
+import sqlalchemy.exc
 from pydantic import BaseModel, PositiveInt
 from starlette.exceptions import HTTPException
 from starlette.concurrency import run_in_threadpool
@@ -67,7 +68,10 @@ async def create_instance(cls: models.BASE, data: BaseModel) -> dict:
         session.commit()
         return session.merge(instance).as_dict()
 
-    return await run_in_threadpool(_create)
+    try:
+        return await run_in_threadpool(_create)
+    except sqlalchemy.exc.IntegrityError as ex:
+        raise HTTPException(status_code=409, detail=str(ex.orig))
 
 
 async def retrieve_instance(cls: models.BASE, instance_id: UUID) -> dict:

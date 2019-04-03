@@ -24,7 +24,9 @@ class Group(BASE, mixins.GuidMixin, mixins.TimestampMixin):
     ):
         """ Lookup a group by name
         """
-        return Session.query(cls).filter(cls.name == name).first()
+        if session is None:
+            session = Session()
+        return session.query(cls).filter(cls.name == name).first()
 
 
 @event.listens_for(Group, "mapper_configured", propagate=True)
