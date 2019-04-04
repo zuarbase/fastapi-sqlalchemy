@@ -42,8 +42,8 @@ class ModelMapping(dict):
     def __setitem__(self, key, value):
         if key in self:
             raise RuntimeError(
-                f"Duplicate '{key}' model found."
-                "There may only be one, non-abstract sub-class."
+                f"Duplicate '{key}' model found. "
+                "There may only be one non-abstract sub-class."
             )
         super().__setitem__(key, value)
 

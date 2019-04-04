@@ -1,10 +1,14 @@
 import fastapi
 from fastapi_sqlalchemy import endpoints, models
 
+from ..models import User
+
 
 def test_login_get(session, app, client):
     template = "<html>${title}</html>"
-    endpoint = endpoints.LoginEndpoint(secret="s0secret", template=template)
+    endpoint = endpoints.LoginEndpoint(
+        User, secret="s0secret", template=template
+    )
 
     @app.get("/login")
     async def _get():
@@ -16,13 +20,6 @@ def test_login_get(session, app, client):
 
 
 def test_login_post(engine, session, app, client):
-
-    # FIXME: hack
-    User = models.base.MODEL_MAPPING.get("User")
-    if not User:
-        class User(models.User):
-            __abstract__ = False
-
     models.BASE.metadata.create_all(engine)
     user = User(username="alice")
     user.password = "test123"
@@ -30,7 +27,7 @@ def test_login_post(engine, session, app, client):
     session.commit()
     user = session.merge(user)
 
-    endpoint = endpoints.LoginEndpoint(secret="s0secret")
+    endpoint = endpoints.LoginEndpoint(User, secret="s0secret")
 
     @app.post("/login")
     async def _post(

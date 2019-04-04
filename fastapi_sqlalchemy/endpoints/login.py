@@ -1,6 +1,7 @@
 """ Login functionality """
 import os
 import logging
+import inspect
 from string import Template
 from typing import Any, Optional
 
@@ -10,8 +11,6 @@ from starlette.responses import HTMLResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 from fastapi_sqlalchemy import tz
-from fastapi_sqlalchemy.models.base import MODEL_MAPPING
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,9 @@ class LoginEndpoint:
 
     def __init__(
             self,
+            user_cls,
             secret,
+            *,
             template: str = DEFAULT_TEMPLATE,
             error_status_code: int = 401,
             location: str = "/",
@@ -35,7 +36,9 @@ class LoginEndpoint:
             jwt_algorithm: str = "HS256",
             form_action: str = "/login"
     ):
+        assert inspect.isclass(user_cls)
         self.secret = secret
+        self.user_cls = user_cls
         self.template = template.strip()
         self.error_status_code = error_status_code
         self.location = location
@@ -47,6 +50,8 @@ class LoginEndpoint:
 
     async def render(self, **kwargs) -> str:
         """ Render the template using the passed parameters """
+        kwargs.setdefault("username", "")
+        kwargs.setdefault("error", "")
         kwargs.setdefault("form_action", self.form_action)
         kwargs.setdefault("modal_title", "Login to your Account")
         kwargs.setdefault("title", "FastAPI-SQLAlchemy")
@@ -76,16 +81,20 @@ class LoginEndpoint:
         user_data.pop("password", None)
         return user_data
 
-    @staticmethod
     async def authenticate(
+            self,
             username: str,
             password: str
     ) -> Optional[dict]:
         """ Perform authentication against database """
         def _get_by_username():
-            return MODEL_MAPPING["User"].get_by_username(username)
+            return self.user_cls.get_by_username(username)
 
         user = await run_in_threadpool(_get_by_username)
+        if not user:
+            logger.info("Invalid user '%s'", username)
+            return None
+
         if not user.verify(password):
             logger.info("Invalid password for user '%s'", user.username)
             return None
