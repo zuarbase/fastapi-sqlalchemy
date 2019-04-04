@@ -10,7 +10,7 @@ import jwt
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 
-from fastapi_sqlalchemy import tz
+from fastapi_sqlalchemy import tz, models
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class LoginEndpoint:
             template = Template(self.template)
         else:
             template = await run_in_threadpool(_read)
-        return template.substitute(**kwargs)
+        return template.safe_substitute(**kwargs)
 
     async def jwt_encode(self, payload):
         """ Build the JWT """
@@ -83,12 +83,13 @@ class LoginEndpoint:
 
     async def authenticate(
             self,
+            session: models.Session,
             username: str,
             password: str
     ) -> Optional[dict]:
         """ Perform authentication against database """
         def _get_by_username():
-            return self.user_cls.get_by_username(username)
+            return self.user_cls.get_by_username(username, session=session)
 
         user = await run_in_threadpool(_get_by_username)
         if not user:
@@ -110,10 +111,16 @@ class LoginEndpoint:
     async def on_post(
             self,
             username: str,
-            password: str
+            password: str,
+            session: models.Session = None
     ) -> Any:
         """ Handle POST requests """
+
+        if session is None:
+            session = models.Session()
+
         user_data = await self.authenticate(
+            session,
             username=username,
             password=password
         )
