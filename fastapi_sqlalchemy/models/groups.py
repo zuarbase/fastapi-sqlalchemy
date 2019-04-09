@@ -19,13 +19,11 @@ class Group(BASE, mixins.GuidMixin, mixins.TimestampMixin):
     @classmethod
     def get_by_name(
             cls,
-            name: str,
-            session: Session = None
+            session: Session,
+            name: str
     ):
         """ Lookup a group by name
         """
-        if session is None:
-            session = Session()
         return session.query(cls).filter(cls.name == name).first()
 
 

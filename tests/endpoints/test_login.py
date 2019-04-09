@@ -34,7 +34,7 @@ def test_login_post(engine, session, app, client):
             username: str = fastapi.Form(None),
             password: str = fastapi.Form(None)
     ):
-        return await endpoint.on_post(username, password)
+        return await endpoint.on_post(session, username, password)
 
     res = client.post(
         "/login",

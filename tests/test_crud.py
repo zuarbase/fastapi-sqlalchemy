@@ -6,17 +6,23 @@ from .people import load_people, Person, PersonRequestModel, PEOPLE_DATA
 def test_crud_list(session, loop):
     expected = [person.as_dict() for person in load_people()]
     assert len(expected) == len(PEOPLE_DATA)
-    assert expected == loop.run_until_complete(crud.list_instances(Person))
+    assert expected == loop.run_until_complete(
+        crud.list_instances(Person, session)
+    )
 
 
 def test_crud_count(session, loop):
     data = load_people()
-    assert loop.run_until_complete(crud.count_instances(Person)) == len(data)
+    assert len(data) == loop.run_until_complete(
+        crud.count_instances(Person, session)
+    )
 
 
 def test_crud_create(session, loop):
     result = loop.run_until_complete(
-        crud.create_instance(Person, PersonRequestModel(**PEOPLE_DATA[0]))
+        crud.create_instance(
+            Person, session, PersonRequestModel(**PEOPLE_DATA[0])
+        )
     )
     for key in ("id", "updated_at", "created_at"):
         assert result.pop(key)
@@ -29,7 +35,9 @@ def test_crud_retrieve(session, loop):
     session.commit()
     person = session.merge(person)
 
-    result = loop.run_until_complete(crud.retrieve_instance(Person, person.id))
+    result = loop.run_until_complete(
+        crud.retrieve_instance(Person, session, person.id)
+    )
     assert result == person.as_dict()
 
 
@@ -45,7 +53,9 @@ def test_crud_update(session, loop):
     data["name"] = "edith"
 
     result = loop.run_until_complete(
-        crud.update_instance(Person, person.id, PersonRequestModel(**data))
+        crud.update_instance(
+            Person, session, person.id, PersonRequestModel(**data)
+        )
     )
     assert result["name"] == "edith"
 
@@ -59,7 +69,9 @@ def test_crud_delete(session, loop):
     session.commit()
     person = session.merge(person)
 
-    result = loop.run_until_complete(crud.delete_instance(Person, person.id))
+    result = loop.run_until_complete(
+        crud.delete_instance(Person, session, person.id)
+    )
     assert person.as_dict() == result
 
     assert session.query(Person).get(person.id) is None

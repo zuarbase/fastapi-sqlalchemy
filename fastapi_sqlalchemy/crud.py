@@ -18,13 +18,14 @@ from . import models, types
 
 async def list_instances(
         cls: models.BASE,
+        session: models.Session,
         filter_spec: List[Dict[str, Any]] = None,
         sort_spec: List[Dict[str, str]] = None,
         offset: types.NonNegativeInt = 0,
         limit: PositiveInt = None
 ) -> List[dict]:
     """ Return all instances of cls """
-    query = models.Session.query(cls)
+    query = session.query(cls)
     if filter_spec:
         query = apply_filters(query, filter_spec)
     if sort_spec:
@@ -42,11 +43,12 @@ async def list_instances(
 
 async def count_instances(
         cls: models.BASE,
+        session: models.Session,
         filter_spec: List[Dict[str, Any]] = None,
         sort_spec: List[Dict[str, Any]] = None,
 ) -> int:
     """ Total count of instances matching the given criteria """
-    query = models.Session.query(cls)
+    query = session.query(cls)
     if filter_spec:
         query = apply_filters(query, filter_spec)
     if sort_spec:
@@ -58,9 +60,12 @@ async def count_instances(
     return await run_in_threadpool(_count)
 
 
-async def create_instance(cls: models.BASE, data: BaseModel) -> dict:
+async def create_instance(
+        cls: models.BASE,
+        session: models.Session,
+        data: BaseModel
+) -> dict:
     """ Create an instances of cls with the provided data """
-    session = models.Session()
     instance = cls(**data.dict())
 
     def _create():
@@ -74,9 +79,12 @@ async def create_instance(cls: models.BASE, data: BaseModel) -> dict:
         raise HTTPException(status_code=409, detail=str(ex.orig))
 
 
-async def retrieve_instance(cls: models.BASE, instance_id: UUID) -> dict:
+async def retrieve_instance(
+        cls: models.BASE,
+        session: models.Session,
+        instance_id: UUID
+) -> dict:
     """ Get an instance of cls by UUID """
-    session = models.Session()
 
     def _retrieve():
         instance = session.query(cls).get(instance_id)
@@ -92,10 +100,10 @@ async def retrieve_instance(cls: models.BASE, instance_id: UUID) -> dict:
 
 async def update_instance(
         cls: models.BASE,
+        session: models.Session,
         instance_id: UUID,
         data: BaseModel) -> dict:
     """ Fully update an instances using the provided data """
-    session = models.Session()
 
     def _update():
         instance = session.query(cls).get(instance_id)
@@ -112,9 +120,12 @@ async def update_instance(
     return data
 
 
-async def delete_instance(cls: models.BASE, instance_id: UUID) -> dict:
+async def delete_instance(
+        cls: models.BASE,
+        session: models.Session,
+        instance_id: UUID
+) -> dict:
     """ Delete an instance by UUID """
-    session = models.Session()
 
     def _delete():
         instance = session.query(cls).get(instance_id)

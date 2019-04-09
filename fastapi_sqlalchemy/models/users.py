@@ -65,13 +65,11 @@ class User(BASE, mixins.GuidMixin, mixins.TimestampMixin):
     @classmethod
     def get_by_username(
             cls,
+            session: Session,
             name: str,
-            session: Session = None
     ):
         """ Lookup a group by name
         """
-        if not session:
-            session = Session()
         return session.query(cls).filter(cls.username == name).first()
 
 

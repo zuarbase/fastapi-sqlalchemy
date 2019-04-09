@@ -1,8 +1,8 @@
 """ Bookkeeping """
-from sqlalchemy import event
+from sqlalchemy import event, inspect
 from sqlalchemy.orm import mapper, relationship
 
-from .base import BASE, MODEL_MAPPING, Session
+from .base import BASE, MODEL_MAPPING
 
 
 @event.listens_for(mapper, "after_configured")
@@ -97,11 +97,12 @@ def _after_configured():
             )
 
     def _permissions(user):
-        return Session.query(permission_cls) \
+        session = inspect(user).session
+        return session.query(permission_cls) \
             .join(user_permissions_table, user_cls) \
             .filter(user_cls.id == user.id) \
             .union(
-                Session.query(permission_cls)
+                session.query(permission_cls)
                 .join(group_permissions_table)
                 .join(group_cls)
                 .join(group_membership_table)

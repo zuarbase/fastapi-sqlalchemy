@@ -35,12 +35,12 @@ def _create_all(engine, session):
 def test_groups(engine, session):
     _create_all(engine, session)
 
-    alice = User.get_by_username("alice")
-    alice.groups.append(Group.get_by_name("users"))
-    alice.groups.append(Group.get_by_name("admins"))
+    alice = User.get_by_username(session, "alice")
+    alice.groups.append(Group.get_by_name(session, "users"))
+    alice.groups.append(Group.get_by_name(session, "admins"))
     session.commit()
 
-    alice = User.get_by_username("alice")
+    alice = User.get_by_username(session, "alice")
     assert ["admins", "users"] == sorted(
         group.name for group in alice.groups
     )
@@ -49,12 +49,12 @@ def test_groups(engine, session):
 def test_user_permissions(engine, session):
     _create_all(engine, session)
 
-    alice = User.get_by_username("alice")
-    alice.user_permissions.append(Permission.get_by_name("READ"))
-    alice.user_permissions.append(Permission.get_by_name("WRITE"))
+    alice = User.get_by_username(session, "alice")
+    alice.user_permissions.append(Permission.get_by_name(session, "READ"))
+    alice.user_permissions.append(Permission.get_by_name(session, "WRITE"))
     session.commit()
 
-    alice = User.get_by_username("alice")
+    alice = User.get_by_username(session, "alice")
     assert ["READ", "WRITE"] == sorted(
         permission.name for permission in alice.user_permissions
     )
@@ -63,12 +63,12 @@ def test_user_permissions(engine, session):
 def test_group_permissions(engine, session):
     _create_all(engine, session)
 
-    admins = Group.get_by_name("admins")
-    admins.permissions.append(Permission.get_by_name("READ"))
-    admins.permissions.append(Permission.get_by_name("WRITE"))
+    admins = Group.get_by_name(session, "admins")
+    admins.permissions.append(Permission.get_by_name(session, "READ"))
+    admins.permissions.append(Permission.get_by_name(session, "WRITE"))
     session.commit()
 
-    admins = Group.get_by_name("admins")
+    admins = Group.get_by_name(session, "admins")
     assert ["READ", "WRITE"] == sorted(
         permission.name for permission in admins.permissions
     )
@@ -77,18 +77,18 @@ def test_group_permissions(engine, session):
 def test_permissions(engine, session):
     _create_all(engine, session)
 
-    alice = User.get_by_username("alice")
+    alice = User.get_by_username(session, "alice")
 
-    admins = Group.get_by_name("admins")
+    admins = Group.get_by_name(session, "admins")
     admins.users.append(alice)
 
-    write_permission = Permission.get_by_name("WRITE")
+    write_permission = Permission.get_by_name(session, "WRITE")
     write_permission.groups.append(admins)
 
-    alice.user_permissions.append(Permission.get_by_name("READ"))
+    alice.user_permissions.append(Permission.get_by_name(session, "READ"))
     session.commit()
 
-    alice = User.get_by_username("alice")
+    alice = User.get_by_username(session, "alice")
     assert ["READ", "WRITE"] == sorted(
         permission.name for permission in alice.permissions
     )
@@ -97,20 +97,20 @@ def test_permissions(engine, session):
 def test_permission_duplicate(engine, session):
     _create_all(engine, session)
 
-    alice = User.get_by_username("alice")
+    alice = User.get_by_username(session, "alice")
 
-    admins = Group.get_by_name("admins")
+    admins = Group.get_by_name(session, "admins")
     admins.users.append(alice)
 
-    read_permission = Permission.get_by_name("READ")
+    read_permission = Permission.get_by_name(session, "READ")
 
-    admins.permissions.append(Permission.get_by_name("WRITE"))
+    admins.permissions.append(Permission.get_by_name(session, "WRITE"))
     admins.permissions.append(read_permission)
 
     alice.user_permissions.append(read_permission)
     session.commit()
 
-    alice = User.get_by_username("alice")
+    alice = User.get_by_username(session, "alice")
     assert ["READ", "WRITE"] == sorted(
         permission.name for permission in alice.permissions
     )

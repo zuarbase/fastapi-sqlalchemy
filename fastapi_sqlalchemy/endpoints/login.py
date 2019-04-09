@@ -89,7 +89,7 @@ class LoginEndpoint:
     ) -> Optional[dict]:
         """ Perform authentication against database """
         def _get_by_username():
-            return self.user_cls.get_by_username(username, session=session)
+            return self.user_cls.get_by_username(session, username)
 
         user = await run_in_threadpool(_get_by_username)
         if not user:
@@ -110,14 +110,11 @@ class LoginEndpoint:
 
     async def on_post(
             self,
+            session: models.Session,
             username: str,
             password: str,
-            session: models.Session = None
     ) -> Any:
         """ Handle POST requests """
-
-        if session is None:
-            session = models.Session()
 
         user_data = await self.authenticate(
             session,

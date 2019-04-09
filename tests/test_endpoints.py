@@ -1,7 +1,7 @@
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 
 from fastapi_sqlalchemy import crud
-from fastapi_sqlalchemy.models import Session
 from fastapi_sqlalchemy.middleware import session_middleware
 
 
@@ -19,13 +19,13 @@ def test_endpoint(session, app, client):
     async def _create_person(
             data: PersonRequestModel
     ) -> dict:
-        return await crud.create_instance(Person, data)
+        return await crud.create_instance(Person, session, data)
 
     res = client.post("/people", json=PEOPLE_DATA[0])
     assert res.status_code == 200
 
     response_data = res.json()
-    person = Session.query(Person).get(response_data["id"])
+    person = session.query(Person).get(response_data["id"])
     assert person.as_dict() == response_data
 
 
@@ -33,9 +33,10 @@ def test_endpoint_duplicate(session, app, client):
 
     @app.post("/people", response_model=PersonResponseModel)
     async def _create_person(
+            request: Request,
             data: PersonRequestModel
     ) -> dict:
-        return await crud.create_instance(Person, data)
+        return await crud.create_instance(Person, request.state.session, data)
 
     app.add_middleware(BaseHTTPMiddleware, dispatch=session_middleware)
 
@@ -43,7 +44,7 @@ def test_endpoint_duplicate(session, app, client):
     assert res.status_code == 200
 
     response_data = res.json()
-    person = Session.query(Person).get(response_data["id"])
+    person = session.query(Person).get(response_data["id"])
     assert person.as_dict() == response_data
 
     res = client.post("/people", json=PEOPLE_DATA[0])
@@ -53,5 +54,5 @@ def test_endpoint_duplicate(session, app, client):
     assert res.status_code == 200
 
     response_data = res.json()
-    person = Session.query(Person).get(response_data["id"])
+    person = session.query(Person).get(response_data["id"])
     assert person.as_dict() == response_data

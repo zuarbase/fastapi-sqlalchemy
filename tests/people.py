@@ -56,11 +56,13 @@ class PersonResponseModel(PersonRequestModel):
 
 
 def load_people():
+    session = models.Session()
+
     people = []
     for data in PEOPLE_DATA:
         person = Person(**data)
-        models.Session.add(person)
+        session.add(person)
         people.append(person)
 
-    models.Session.commit()
-    return [models.Session.merge(person) for person in people]
+    session.commit()
+    return [session.merge(person) for person in people]
