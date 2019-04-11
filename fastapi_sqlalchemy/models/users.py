@@ -27,6 +27,12 @@ class User(BASE, mixins.GuidMixin, mixins.TimestampMixin):
         nullable=True,
     )
 
+    def as_dict(self):
+        """ Convert the User instance to a dictionary """
+        result = super().as_dict()
+        del result["hashed_password"]
+        return result
+
     @validates("username")
     def _set_name(
             self,
