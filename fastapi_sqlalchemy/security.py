@@ -5,56 +5,62 @@ from starlette.requests import Request
 from starlette.exceptions import HTTPException
 from fastapi import Depends
 
-SCOPE_HEADER_NAME = "x-payload-scopes"
+PERMISSION_HEADER_NAME = "x-payload-permissions"
+
+ADMIN_PERMISSION = "*"
 
 
-async def read_scopes(
+async def read_permissions(
         request: Request,
-        header_name: str = SCOPE_HEADER_NAME
+        header_name: str = PERMISSION_HEADER_NAME
 ) -> list:
-    """ Read scopes from the request headers """
+    """ Read permissions from the request headers """
     result = []
     for header in request.headers.getlist(header_name):
         result.extend([token.strip() for token in header.split(",")])
+    if ADMIN_PERMISSION in result:
+        return [ADMIN_PERMISSION]
     return result
 
 
-class TrustedScope(Depends):
-    """ scope-based authorization """
+class TrustedPermissions(Depends):
+    """ permission-based authorization """
     def __init__(self):
-        super().__init__(read_scopes)
+        super().__init__(read_permissions)
 
 
 def requires_any(
-        scopes: typing.Sequence[str],
-        allowed_scopes: typing.Sequence[str],
+        permissions: typing.Sequence[str],
+        allowed_permissions: typing.Sequence[str],
         status_code: int = 403
 ) -> None:
-    """ Check that any scope is present """
-    for scope in scopes:
-        if scope in allowed_scopes:
+    """ Check that any permission is present """
+    for permission in permissions:
+        if permission == ADMIN_PERMISSION:
+            return
+        if permission in allowed_permissions:
             return
     raise HTTPException(status_code=status_code)
 
 
 def requires_all(
-        scopes: typing.Sequence[str],
-        needed_scopes: typing.Sequence[str],
+        permissions: typing.Sequence[str],
+        needed_permissions: typing.Sequence[str],
         status_code: int = 403
 ) -> None:
-    """ Check that all scopes are present """
-    if "admin" in scopes:
+    """ Check that all permissions are present """
+    if ADMIN_PERMISSION in permissions:
         return
 
-    for scope in needed_scopes:
-        if scope not in scopes:
+    for permission in needed_permissions:
+        if permission not in permissions:
             raise HTTPException(status_code=status_code)
 
 
 def requires_admin(
-        scopes: typing.Sequence[str],
+        permissions: typing.Sequence[str],
         status_code: int = 403
 ) -> None:
-    """ Check that the 'admin' scope is present """
-    if "admin" not in scopes:
+    """ Check that the 'admin' permission is present """
+    if ADMIN_PERMISSION not in permissions:
         raise HTTPException(status_code=status_code)
