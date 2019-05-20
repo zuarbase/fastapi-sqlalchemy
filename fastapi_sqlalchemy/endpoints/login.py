@@ -85,9 +85,12 @@ class LoginEndpoint:
             self,
             session: models.Session,
             username: str,
-            password: str
+            password: str,
+            **kwargs
     ) -> Optional[dict]:
         """ Perform authentication against database """
+        # pylint: disable=unused-argument
+
         def _get_by_username():
             return self.user_cls.get_by_username(session, username)
 
@@ -113,13 +116,14 @@ class LoginEndpoint:
             session: models.Session,
             username: str,
             password: str,
+            **kwargs
     ) -> Any:
         """ Handle POST requests """
-
         user_data = await self.authenticate(
             session,
             username=username,
-            password=password
+            password=password,
+            **kwargs
         )
         if not user_data:
             # ref: OWASP
