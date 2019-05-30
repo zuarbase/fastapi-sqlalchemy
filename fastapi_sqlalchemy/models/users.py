@@ -74,9 +74,9 @@ class User(BASE, mixins.GuidMixin, mixins.TimestampMixin):
             session: Session,
             name: str,
     ):
-        """ Lookup a group by name
+        """ Lookup a User by name
         """
-        return session.query(cls).filter(cls.username == name).first()
+        return session.query(cls).filter(cls.username == name.lower()).first()
 
 
 @event.listens_for(User, "mapper_configured", propagate=True)

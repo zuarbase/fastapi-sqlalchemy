@@ -46,6 +46,16 @@ def test_groups(engine, session):
     )
 
 
+def test_user_case(engine, session):
+    _create_all(engine, session)
+
+    user = User(username="Bob")
+    session.add(user)
+    session.commit()
+
+    assert User.get_by_username(session, "BOB")
+
+
 def test_user_permissions(engine, session):
     _create_all(engine, session)
 
