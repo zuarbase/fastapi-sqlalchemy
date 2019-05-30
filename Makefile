@@ -24,4 +24,9 @@ pylint_tests:
 
 test:
 	pytest -xvv tests
-.PHONY: tests
+.PHONY: test
+
+pyenv:
+	virtualenv -p python3 pyenv
+	pyenv/bin/pip install -e .[dev,prod]
+.PHONY: pyenv

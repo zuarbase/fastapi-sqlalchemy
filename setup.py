@@ -9,7 +9,7 @@ setup(
     packages=find_packages(exclude=["tests"]),
     install_requires=[
         "email-validator",
-        "fastapi",
+        "fastapi>=0.26.0",
         "passlib",
         "python-dateutil",
         "python-multipart",
@@ -28,6 +28,8 @@ setup(
             "requests",
             "flake8",
             "flake8-quotes"
+        ],
+        "prod": [
         ]
     }
 )

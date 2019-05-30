@@ -4,10 +4,9 @@ import asyncio
 import sqlalchemy
 import pytest
 
-import fastapi
 from starlette.testclient import TestClient
 
-from fastapi_sqlalchemy import models
+from fastapi_sqlalchemy import models, applications
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
@@ -15,20 +14,6 @@ DATABASE_URL = os.environ["DATABASE_URL"]
 @pytest.fixture(scope="function", name="loop")
 def loop_fixture():
     return asyncio.new_event_loop()
-
-
-@pytest.fixture(scope="function", name="app")
-def app_fixture():
-    return fastapi.FastAPI(
-        title="fastapi_sqlalchemy",
-        version="0.0.0"
-    )
-
-
-@pytest.fixture(scope="function", name="client")
-def client_fixture(app):
-    client = TestClient(app)
-    return client
 
 
 @pytest.fixture(scope="session", name="engine")
@@ -57,3 +42,18 @@ def session_fixture(engine):
     # models.BASE.metadata.clear()
     # models.base.MODEL_MAPPING.clear()
     _drop_all()
+
+
+@pytest.fixture(scope="function", name="app")
+def app_fixture(engine):
+    return applications.FastAPI_SQLAlchemy(
+        engine,
+        title="fastapi_sqlalchemy",
+        version="0.0.0"
+    )
+
+
+@pytest.fixture(scope="function", name="client")
+def client_fixture(app):
+    client = TestClient(app)
+    return client

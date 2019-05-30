@@ -5,10 +5,19 @@ from sqlalchemy.engine import Engine, Connection, create_engine
 
 
 from fastapi import FastAPI
-from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
-from fastapi.applications import http_exception
+from fastapi.openapi.docs import (
+    get_redoc_html,
+    get_swagger_ui_html,
+    get_swagger_ui_oauth2_redirect_html,
+)
+from fastapi.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+)
+from fastapi.exceptions import RequestValidationError
 
-from starlette.responses import JSONResponse
+from starlette.requests import Request
+from starlette.responses import HTMLResponse, JSONResponse
 from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.routing import BaseRoute
@@ -69,30 +78,45 @@ class FastAPI_SQLAlchemy(FastAPI):
     def setup(self) -> None:
         """ Override setup() to not add openapi_prefix to openapi_url """
         if self.openapi_url:
-            self.add_route(
-                self.openapi_url,
-                lambda req: JSONResponse(self.openapi()),
-                include_in_schema=False,
-            )
+            async def openapi(_req: Request) -> JSONResponse:
+                return JSONResponse(self.openapi())
+
+            self.add_route(self.openapi_url, openapi, include_in_schema=False)
+            # REMOVED: openapi_url = self.openapi_prefix + self.openapi_url
         if self.openapi_url and self.docs_url:
-            self.add_route(
-                self.docs_url,
-                lambda r: get_swagger_ui_html(
+
+            async def swagger_ui_html(_req: Request) -> HTMLResponse:
+                return get_swagger_ui_html(
                     openapi_url=self.openapi_url,
                     title=self.title + " - Swagger UI",
-                ),
-                include_in_schema=False,
-            )
-        if self.openapi_url and self.redoc_url:
+                    oauth2_redirect_url=self.swagger_ui_oauth2_redirect_url,
+                )
+
             self.add_route(
-                self.redoc_url,
-                lambda r: get_redoc_html(
-                    openapi_url=self.openapi_url,
-                    title=self.title + " - ReDoc",
-                ),
-                include_in_schema=False,
+                self.docs_url, swagger_ui_html, include_in_schema=False
             )
-        self.add_exception_handler(HTTPException, http_exception)
+
+            if self.swagger_ui_oauth2_redirect_url:
+                async def swagger_ui_redirect(_req: Request) -> HTMLResponse:
+                    return get_swagger_ui_oauth2_redirect_html()
+
+                self.add_route(
+                    self.swagger_ui_oauth2_redirect_url,
+                    swagger_ui_redirect,
+                    include_in_schema=False,
+                )
+        if self.openapi_url and self.redoc_url:
+            async def redoc_html(_req: Request) -> HTMLResponse:
+                return get_redoc_html(
+                    openapi_url=self.openapi_url, title=self.title + " - ReDoc"
+                )
+
+            self.add_route(self.redoc_url, redoc_html, include_in_schema=False)
+        self.add_exception_handler(HTTPException, http_exception_handler)
+        self.add_exception_handler(
+            RequestValidationError, request_validation_exception_handler
+        )
+        # ADDED
         self.add_default_middleware()
 
     def add_default_middleware(self) -> None:

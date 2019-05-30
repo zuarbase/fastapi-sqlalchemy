@@ -3,7 +3,7 @@ import typing
 
 from starlette.requests import Request
 from starlette.exceptions import HTTPException
-from fastapi import Depends
+from fastapi import params
 
 PERMISSION_HEADER_NAME = "x-payload-permissions"
 
@@ -23,7 +23,7 @@ async def read_permissions(
     return result
 
 
-class TrustedPermissions(Depends):
+class TrustedPermissions(params.Depends):
     """ permission-based authorization """
     def __init__(self):
         super().__init__(read_permissions)

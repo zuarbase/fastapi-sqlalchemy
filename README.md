@@ -1,6 +1,10 @@
 # FastAPI-SQLAlchemy
 Full-stack, asynchronous Python3 framework.
 
+## Design goals
+* Fast, full-service framework
+* Modular approach that does not force any design decisions
+
 ## Getting started
 
 ```python

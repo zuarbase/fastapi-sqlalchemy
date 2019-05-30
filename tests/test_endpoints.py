@@ -1,8 +1,6 @@
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
 from fastapi_sqlalchemy import crud
-from fastapi_sqlalchemy.middleware import session_middleware
 
 
 from .people import (
@@ -37,8 +35,6 @@ def test_endpoint_duplicate(session, app, client):
             data: PersonRequestModel
     ) -> dict:
         return await crud.create_instance(Person, request.state.session, data)
-
-    app.add_middleware(BaseHTTPMiddleware, dispatch=session_middleware)
 
     res = client.post("/people", json=PEOPLE_DATA[0])
     assert res.status_code == 200
