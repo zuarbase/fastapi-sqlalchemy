@@ -37,7 +37,7 @@ class FastAPI_SQLAlchemy(FastAPI):
             template_directory: str = None,
             title: str = "Fast API",
             description: str = "",
-            version: str = "0.1.2",
+            version: str = "0.2.0",
             openapi_url: Optional[str] = "/openapi.json",
             openapi_prefix: str = "",
             docs_url: Optional[str] = "/docs",
