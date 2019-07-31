@@ -1,6 +1,8 @@
 """ User model """
 from passlib.hash import pbkdf2_sha512
 
+from starlette.authentication import SimpleUser
+
 import sqlalchemy
 from sqlalchemy import event
 from sqlalchemy.orm import validates
@@ -9,7 +11,7 @@ from .base import BASE, Session, MODEL_MAPPING
 from . import mixins
 
 
-class User(BASE, mixins.GuidMixin, mixins.TimestampMixin):
+class User(BASE, SimpleUser, mixins.GuidMixin, mixins.TimestampMixin):
     """
     The user table
     """
@@ -78,7 +80,12 @@ class User(BASE, mixins.GuidMixin, mixins.TimestampMixin):
         """
         return session.query(cls).filter(cls.username == name.lower()).first()
 
+    @property
+    def identity(self) -> str:
+        return str(self.id)
+
 
 @event.listens_for(User, "mapper_configured", propagate=True)
 def _mapper_configured(_mapper, cls):
-    MODEL_MAPPING["User"] = cls
+    if getattr(cls, "__model_mapping__", True):
+        MODEL_MAPPING["User"] = cls

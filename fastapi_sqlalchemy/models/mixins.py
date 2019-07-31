@@ -7,6 +7,7 @@ from sqlalchemy.ext.declarative import declared_attr
 
 from fastapi_sqlalchemy import tz
 from .types import GUID
+from .base import Session
 
 
 class GuidMixin:
@@ -65,3 +66,39 @@ class DictMixin:
                 value = value.name
             result[attr.key] = value
         return result
+
+
+class ConfirmationMixin:
+    """ Mixin to support confirmation for Users """
+
+    email = sqlalchemy.Column(
+        sqlalchemy.String(255),
+        nullable=False,
+        unique=True
+    )
+
+    @classmethod
+    def get_by_email(
+            cls,
+            session: Session,
+            email: str,
+    ):
+        """ Lookup a User by name
+        """
+        return session.query(cls).filter(cls.email == email).first()
+
+    @declared_attr
+    def confirmed_at(self):
+        """ Email confirmation timestamp """
+        column = sqlalchemy.Column(
+            sqlalchemy.DateTime(timezone=True),
+            nullable=True,
+        )
+        # pylint: disable=protected-access
+        column._creation_order = 9700
+        return column
+
+    @property
+    def confirmed(self):
+        """ Whether or not the email has been confirmed """
+        return self.confirmed_at is not None

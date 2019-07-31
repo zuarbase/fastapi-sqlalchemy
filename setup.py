@@ -6,7 +6,11 @@ VERSION = "0.1.2"
 setup(
     name=PACKAGE,
     version=VERSION,
+    author="Matthew Laue",
+    author_email="matt@zuar.com",
+    url="https://github.com/zuarbase/fastapi-sqlalchemy",
     packages=find_packages(exclude=["tests"]),
+    include_package_data=True,
     install_requires=[
         "email-validator",
         "fastapi>=0.26.0",
@@ -16,7 +20,8 @@ setup(
         "pyjwt",
         "sqlalchemy",
         "sqlalchemy-filters",
-        "tzlocal"
+        "tzlocal",
+        "itsdangerous",
     ],
     extras_require={
         "dev": [
@@ -25,11 +30,14 @@ setup(
             "pytest",
             "pytest-env",
             "pytest-dotenv",
+            "pytest-mock",
             "requests",
             "flake8",
-            "flake8-quotes"
+            "flake8-quotes",
         ],
         "prod": [
+            "uvicorn",
+            "gunicorn",
         ]
     }
 )

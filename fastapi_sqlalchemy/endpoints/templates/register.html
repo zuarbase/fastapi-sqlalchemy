@@ -11,7 +11,8 @@
 
     <div style="width:100%; min-height:100vh; display: flex; justify-content: center; align-items: center;">
         <div style="width:300px">
-        <form action="${form_action}" method="post">
+        <form action="${form_action}" method="post" autocomplete="off">
+
             <div class="text-center" style="margin-bottom:20px">
                 <img  src="https://raw.githubusercontent.com/zuarbase/fastapi-sqlalchemy/master/assets/logo-128x128.png" />
             </div>
@@ -21,7 +22,13 @@
                 <input name="username" type="text" class="form-control" placeholder="Username" required="required" value="${username}">
             </div>
             <div class="form-group">
-                <input name="password" type="password" class="form-control" placeholder="Password" required="required">
+                <input name="email" type="text" class="form-control" placeholder="Email" required="required" value="${email}">
+            </div>
+            <div class="form-group">
+                <input name="password" type="password" class="form-control" placeholder="Password" required="required" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <input name="confirm_password" type="password" class="form-control" placeholder="Confirm Password" required="required" autocomplete="new-password">
             </div>
             <input type="submit" class="btn btn-primary btn-block btn-lg" style="background-color: #00C1AA; border: none" value="Login">
         </form>

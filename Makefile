@@ -19,7 +19,7 @@ pylint_pkg:
 .PHONY: pylint_pkg
 
 pylint_tests:
-	pylint tests  --disable=missing-docstring,unused-argument
+	pylint tests  --disable=missing-docstring,unused-argument,too-many-ancestors,unexpected-keyword-arg
 .PHONY: pylint_tests
 
 test:

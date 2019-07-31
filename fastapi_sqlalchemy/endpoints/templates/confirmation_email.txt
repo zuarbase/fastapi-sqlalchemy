@@ -1,0 +1,5 @@
+Welcome! Thanks for signing up. Please open the link to activate your account:
+
+${confirm_url}
+
+Thank You!

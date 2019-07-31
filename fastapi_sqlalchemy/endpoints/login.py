@@ -2,7 +2,6 @@
 import os
 import logging
 import inspect
-from string import Template
 from typing import Any, Optional
 
 import jwt
@@ -10,7 +9,7 @@ import jwt
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 
-from fastapi_sqlalchemy import tz, models
+from fastapi_sqlalchemy import tz, models, utils
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +33,8 @@ class LoginEndpoint:
             secure: bool = True,
             cookie_name: str = "jwt",
             jwt_algorithm: str = "HS256",
-            form_action: str = "/login"
+            form_action: str = "/login",
+            require_confirmation: bool = False,
     ):
         assert inspect.isclass(user_cls)
         self.secret = secret
@@ -47,8 +47,9 @@ class LoginEndpoint:
         self.cookie_name = cookie_name
         self.jwt_algorithm = jwt_algorithm
         self.form_action = form_action
+        self.require_confirmation = require_confirmation
 
-    async def render(self, **kwargs) -> str:
+    def render(self, **kwargs) -> str:
         """ Render the template using the passed parameters """
         kwargs.setdefault("username", "")
         kwargs.setdefault("error", "")
@@ -56,16 +57,7 @@ class LoginEndpoint:
         kwargs.setdefault("modal_title", "Login to your Account")
         kwargs.setdefault("title", "FastAPI-SQLAlchemy")
 
-        def _read():
-            with open(self.template, "r") as filp:
-                content = filp.read()
-            return Template(content)
-
-        if self.template.startswith("<"):
-            template = Template(self.template)
-        else:
-            template = await run_in_threadpool(_read)
-        return template.safe_substitute(**kwargs)
+        return utils.render(self.template, **kwargs)
 
     async def jwt_encode(self, payload):
         """ Build the JWT """
@@ -108,7 +100,7 @@ class LoginEndpoint:
 
     async def on_get(self) -> HTMLResponse:
         """ Handle GET requests """
-        html = await self.render()
+        html = await run_in_threadpool(self.render)
         return HTMLResponse(content=html, status_code=200)
 
     async def on_post(
@@ -128,7 +120,9 @@ class LoginEndpoint:
         if not user_data:
             # ref: OWASP
             error = "Login failed; Invalid userID or password"
-            html = await self.render(username=username, error=error)
+            html = await run_in_threadpool(
+                self.render, username=username, error=error
+            )
             return HTMLResponse(
                 content=html,
                 status_code=self.error_status_code

@@ -38,10 +38,7 @@ def session_fixture(engine):
     yield session
     session.close()
 
-    # FIXME: clear all models after each run
-    # models.BASE.metadata.clear()
-    # models.base.MODEL_MAPPING.clear()
-    _drop_all()
+    # _drop_all()
 
 
 @pytest.fixture(scope="function", name="app")

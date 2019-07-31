@@ -1,4 +1,6 @@
 """ Utility functions """
+from string import Template
+
 import uuid
 
 try:
@@ -18,3 +20,19 @@ def ordered_uuid(value=None):
     if not value:
         value = str(uuid.uuid1())
     return OrderedUUID(value)
+
+
+def render(
+        path_or_template: str,
+        **kwargs,
+) -> str:
+    """ Render the specified template - either a file or the actual template """
+    if isinstance(path_or_template, Template):
+        template = path_or_template
+    elif path_or_template.startswith("<"):
+        template = Template(path_or_template)
+    else:
+        with open(path_or_template, "r") as filp:
+            contents = filp.read()
+        template = Template(contents)
+    return template.safe_substitute(**kwargs)
