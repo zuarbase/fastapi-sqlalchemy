@@ -11,7 +11,9 @@ from starlette.responses import Response
 from starlette.concurrency import run_in_threadpool
 from starlette.websockets import WebSocket
 from starlette.responses import RedirectResponse
-from starlette.authentication import AuthenticationBackend, AuthCredentials
+from starlette.authentication import (
+    AuthenticationBackend, AuthCredentials, SimpleUser
+)
 
 
 ADMIN_SCOPE = "*"
@@ -24,7 +26,7 @@ class PayloadAuthBackend(AuthenticationBackend):
 
     def __init__(
             self,
-            user_cls: type,
+            user_cls: type = None,
             admin_scope: str = ADMIN_SCOPE,
     ):
         super().__init__()
@@ -70,11 +72,15 @@ class PayloadAuthBackend(AuthenticationBackend):
                 "Missing session: try adding SessionMiddleware."
             )
 
-        user = await run_in_threadpool(
-            self.user_cls.get_by_username, session, username
-        )
-        if not user:
-            logger.warning("User not found: %s", username)
+        if self.user_cls:
+            user = await run_in_threadpool(
+                self.user_cls.get_by_username, session, username
+            )
+            if not user:
+                logger.warning("User not found: %s", username)
+                return
+        else:
+            user = SimpleUser(username=username)
 
         scopes = await self.scopes(payload)
         return AuthCredentials(scopes), user
