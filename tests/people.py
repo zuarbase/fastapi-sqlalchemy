@@ -4,7 +4,11 @@ from uuid import UUID
 
 import sqlalchemy
 from sqlalchemy.types import CHAR
-from pydantic import BaseModel, constr, PositiveInt
+from pydantic import BaseModel
+from pydantic.types import (  # pylint: disable=no-name-in-module
+    constr,
+    PositiveInt
+)
 
 from fastapi_sqlalchemy import models
 

@@ -50,6 +50,7 @@ class GUID(TypeDecorator):
         """ see sqlalchemy.types.TypeDecorator.process_literal_param """
         raise NotImplementedError()
 
+    @property
     def python_type(self):
         """ see sqlalchemy.types.TypeDecorator.process_literal_param """
         raise NotImplementedError()
@@ -81,6 +82,7 @@ class JSONEncodedDict(TypeDecorator):
         """ see sqlalchemy.types.TypeDecorator.process_literal_param """
         raise NotImplementedError()
 
+    @property
     def python_type(self):
         """ see sqlalchemy.types.TypeDecorator.process_literal_param """
         raise NotImplementedError()

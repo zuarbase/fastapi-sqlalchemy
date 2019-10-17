@@ -13,7 +13,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "email-validator",
-        "fastapi>=0.26.0",
+        "fastapi>=0.42.0",
         "passlib",
         "python-dateutil",
         "python-multipart",

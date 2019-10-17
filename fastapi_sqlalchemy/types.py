@@ -1,5 +1,5 @@
 """ Extensions to pydantic.types """
-from pydantic import ConstrainedInt
+from pydantic.types import ConstrainedInt  # pylint: disable=no-name-in-module
 from fastapi.params import Query
 
 
