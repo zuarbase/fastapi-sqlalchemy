@@ -23,7 +23,8 @@ async def list_instances(
         filter_spec: List[Dict[str, Any]] = None,
         sort_spec: List[Dict[str, str]] = None,
         offset: types.NonNegativeInt = 0,
-        limit: PositiveInt = None
+        limit: PositiveInt = None,
+        options: Any = None
 ) -> List[dict]:
     """ Return all instances of cls """
     query = session.query(cls)
@@ -31,6 +32,9 @@ async def list_instances(
         query = apply_filters(query, filter_spec)
     if sort_spec:
         query = apply_sort(query, sort_spec)
+
+    if options:
+        query = query.options(options)
 
     if limit:
         query = query.limit(limit)

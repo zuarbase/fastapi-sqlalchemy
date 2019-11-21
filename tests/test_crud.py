@@ -1,3 +1,5 @@
+from sqlalchemy.orm import lazyload
+
 from fastapi_sqlalchemy import crud
 
 from .people import load_people, Person, PersonRequestModel, PEOPLE_DATA
@@ -8,6 +10,14 @@ def test_crud_list(session, loop):
     assert len(expected) == len(PEOPLE_DATA)
     assert expected == loop.run_until_complete(
         crud.list_instances(Person, session)
+    )
+
+
+def test_crud_list_with_options(session, loop):
+    expected = [person.as_dict() for person in load_people()]
+    assert len(expected) == len(PEOPLE_DATA)
+    assert expected == loop.run_until_complete(
+        crud.list_instances(Person, session, options=lazyload("*"))
     )
 
 

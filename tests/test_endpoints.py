@@ -1,6 +1,7 @@
 from starlette.requests import Request
 
-from fastapi_sqlalchemy import crud
+from fastapi import Depends
+from fastapi_sqlalchemy import crud, utils
 
 
 from .people import (
@@ -52,3 +53,15 @@ def test_endpoint_duplicate(session, app, client):
     response_data = res.json()
     person = session.query(Person).get(response_data["id"])
     assert person.as_dict() == response_data
+
+
+def test_endpoint_get_session(session, app, client):
+
+    @app.get("/endpoint")
+    async def _create_person(
+            param=Depends(utils.get_session)
+    ) -> dict:
+        assert param
+
+    res = client.get("/endpoint")
+    assert res.status_code == 200

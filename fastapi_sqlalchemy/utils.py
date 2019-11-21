@@ -1,7 +1,9 @@
 """ Utility functions """
 from string import Template
-
 import uuid
+
+from starlette.requests import Request
+
 
 try:
     from ordered_uuid import OrderedUUID
@@ -36,3 +38,10 @@ def render(
             contents = filp.read()
         template = Template(contents)
     return template.safe_substitute(**kwargs)
+
+
+def get_session(request: Request):
+    """ Get Session from a request
+    usage: session = Depends(get_session)
+    """
+    return request.state.session

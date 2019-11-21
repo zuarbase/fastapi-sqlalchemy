@@ -27,7 +27,7 @@ from fastapi_sqlalchemy.middleware import session_middleware
 
 
 class FastAPI_SQLAlchemy(FastAPI):
-    """ Application class for Mitto """
+    """ Application class """
 
     def __init__(
             self,
