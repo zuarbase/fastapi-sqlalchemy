@@ -87,12 +87,17 @@ async def create_instance(
 async def retrieve_instance(
         cls: models.BASE,
         session: models.Session,
-        instance_id: UUID
+        instance_id: UUID,
+        options: Any = None
 ) -> dict:
     """ Get an instance of cls by UUID """
+    query = session.query(cls)
+
+    if options:
+        query = query.options(options)
 
     def _retrieve():
-        instance = session.query(cls).get(instance_id)
+        instance = query.get(instance_id)
         if instance:
             return instance.as_dict()
         return None
