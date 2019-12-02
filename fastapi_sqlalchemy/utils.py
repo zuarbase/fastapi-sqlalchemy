@@ -2,6 +2,8 @@
 from string import Template
 import uuid
 
+import jwt
+
 from starlette.requests import Request
 
 
@@ -45,3 +47,13 @@ def get_session(request: Request):
     usage: session = Depends(get_session)
     """
     return request.state.session
+
+
+def jwt_encode(payload, secret, algorithm="HS256"):
+    """ Encode the given payload as a JWT """
+    assert "exp" in payload
+    return jwt.encode(
+        payload,
+        str(secret),
+        algorithm=algorithm,
+    ).decode("utf-8")
