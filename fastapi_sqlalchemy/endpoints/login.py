@@ -4,8 +4,6 @@ import logging
 import inspect
 from typing import Any, Optional
 
-import jwt
-
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 
@@ -62,11 +60,11 @@ class LoginEndpoint:
     async def jwt_encode(self, payload):
         """ Build the JWT """
         assert "exp" in payload
-        return jwt.encode(
+        return utils.jwt_encode(
             payload,
-            str(self.secret),
+            self.secret,
             algorithm=self.jwt_algorithm,
-        ).decode("utf-8")
+        )
 
     async def payload(self, user_data):
         """ Determine the JWT contents (keep for sub-classes """
@@ -108,6 +106,7 @@ class LoginEndpoint:
             session: models.Session,
             username: str,
             password: str,
+            location: str = None,
             **kwargs
     ) -> Any:
         """ Handle POST requests """
@@ -139,7 +138,7 @@ class LoginEndpoint:
         result["token"] = token
         result["exp"] = expiry.isoformat()
 
-        headers = {"location": self.location}
+        headers = {"location": location or self.location}
         response = JSONResponse(
             content=result,
             status_code=303,
