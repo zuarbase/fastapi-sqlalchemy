@@ -124,3 +124,21 @@ def test_permission_duplicate(engine, session):
     assert ["READ", "WRITE"] == sorted(
         permission.name for permission in alice.permissions
     )
+
+
+def test_timestamp_mixin(session):
+    assert models.TimestampMixin in User.__mro__
+
+    user = User(username="test_timestamp_mixin")
+    session.add(user)
+    session.commit()
+
+    updated_at = user.updated_at
+    assert user.created_at.replace(microsecond=0) == \
+        updated_at.replace(microsecond=0)
+
+    user.username = "test_timestamp_mixin__updated"
+    session.add(user)
+    session.commit()
+    assert user.updated_at != updated_at
+    assert user.created_at < user.updated_at

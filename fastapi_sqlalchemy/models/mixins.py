@@ -43,7 +43,6 @@ class TimestampMixin:
         column = sqlalchemy.Column(
             sqlalchemy.DateTime(timezone=True),
             default=tz.utcnow,
-            onupdate=tz.utcnow,
             nullable=False,
         )
         # pylint: disable=protected-access
