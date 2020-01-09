@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 PACKAGE = "fastapi-sqlalchemy"
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 
 setup(
     name=PACKAGE,
