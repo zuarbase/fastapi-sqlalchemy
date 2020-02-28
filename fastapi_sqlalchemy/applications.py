@@ -1,7 +1,7 @@
 """ The main application """
 from typing import Any, Dict, List, Optional, Union
 
-from sqlalchemy.engine import Engine, Connection, create_engine
+from sqlalchemy.engine import Engine, Connection
 
 
 from fastapi import FastAPI
@@ -22,6 +22,7 @@ from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.routing import BaseRoute
 
+from fastapi_sqlalchemy import db_registry
 from fastapi_sqlalchemy.models import Session, BASE
 from fastapi_sqlalchemy.middleware import session_middleware
 
@@ -58,10 +59,7 @@ class FastAPI_SQLAlchemy(FastAPI):
             **extra
         )
         if bind is not None:
-            if isinstance(bind, str):
-                self.bind = create_engine(bind, pool_pre_ping=True)
-            else:
-                self.bind = bind
+            self.bind = db_registry.register(bind, pool_pre_ping=True)
             Session.configure(bind=self.bind)
         else:
             self.bind = None
@@ -70,6 +68,11 @@ class FastAPI_SQLAlchemy(FastAPI):
     def Session(self):
         """ Convenience property for the global Session """
         return Session
+
+    @property
+    def db_registry(self):
+        """Convenience property to access DB registry,"""
+        return db_registry
 
     def create_all(self) -> None:
         """ Create tables from the model """
