@@ -28,6 +28,7 @@ setup(
             "coverage",
             "pylint",
             "pytest",
+            "pytest-cov",
             "pytest-env",
             "pytest-dotenv",
             "pytest-mock",
