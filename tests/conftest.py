@@ -6,7 +6,7 @@ import pytest
 
 from starlette.testclient import TestClient
 
-from fastapi_sqlalchemy import models, applications
+from fastapi_sqlalchemy import models, applications, middleware
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
@@ -38,16 +38,16 @@ def session_fixture(engine):
     yield session
     session.close()
 
-    # _drop_all()
-
 
 @pytest.fixture(scope="function", name="app")
 def app_fixture(engine):
-    return applications.FastAPI_SQLAlchemy(
-        engine,
+    app = applications.FastAPI_SQLAlchemy(
         title="fastapi_sqlalchemy",
         version="0.0.0"
     )
+    app.set_bind(engine)
+    app.add_middleware(middleware.SessionMiddleware)
+    return app
 
 
 @pytest.fixture(scope="function", name="client")

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 PACKAGE = "fastapi-sqlalchemy"
-VERSION = "0.6.0"
+VERSION = "0.7.0"
 
 setup(
     name=PACKAGE,
@@ -13,7 +13,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "email-validator",
-        "fastapi>=0.42.0",
+        "fastapi==0.52.0",
         "passlib",
         "python-dateutil",
         "python-multipart",
