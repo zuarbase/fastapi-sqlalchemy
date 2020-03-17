@@ -4,9 +4,10 @@ import asyncio
 import sqlalchemy
 import pytest
 
-from starlette.testclient import TestClient
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
-from fastapi_sqlalchemy import models, applications, middleware
+from fastapi_sqlalchemy import models
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
@@ -17,9 +18,8 @@ def loop_fixture():
 
 
 @pytest.fixture(scope="session", name="engine")
-def engine_fixture():
+def engine_fixture() -> sqlalchemy.engine.Engine:
     engine = sqlalchemy.create_engine(DATABASE_URL)
-    models.Session.configure(bind=engine)
     return engine
 
 
@@ -33,6 +33,8 @@ def session_fixture(engine):
 
     _drop_all()
     models.BASE.metadata.create_all(engine)
+
+    models.Session.configure(bind=engine)
     session = models.Session()
 
     yield session
@@ -41,12 +43,10 @@ def session_fixture(engine):
 
 @pytest.fixture(scope="function", name="app")
 def app_fixture(engine):
-    app = applications.FastAPI_SQLAlchemy(
+    app = FastAPI(
         title="fastapi_sqlalchemy",
         version="0.0.0"
     )
-    app.set_bind(engine)
-    app.add_middleware(middleware.SessionMiddleware)
     return app
 
 

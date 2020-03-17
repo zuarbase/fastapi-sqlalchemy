@@ -15,9 +15,10 @@ def fixture_mock_create_engine(mocker):
         side_effect=lambda url, **kwargs: mocker.Mock(url=url, **kwargs))
 
 
-def test_register_engine(mocker, mock_create_engine):
+def test_register_existing_engine(mocker, mock_create_engine):
     url = "/fake/url"
     engine = mocker.Mock(url=url)
+    engine.engine = engine  # Follow Connectable interface
 
     db_registry.register(engine)
 
@@ -25,10 +26,10 @@ def test_register_engine(mocker, mock_create_engine):
     assert registered_engine is engine, "New engine instance was created."
 
 
-def test_create_engine(mocker, mock_create_engine):
+def test_register_url(mocker, mock_create_engine):
     url = "/fake/url"
 
-    kwargs = dict(key1="value1", echo=True)
+    kwargs = {"key1": "value1", "echo": True}
     created_engine = db_registry.register(url, **kwargs)
     assert created_engine
 
