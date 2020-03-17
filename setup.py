@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 PACKAGE = "fastapi-sqlalchemy"
-VERSION = "0.7.0"
+VERSION = "0.8.0"
 
 setup(
     name=PACKAGE,
@@ -13,7 +13,8 @@ setup(
     include_package_data=True,
     install_requires=[
         "email-validator",
-        "fastapi==0.52.0",
+        "fastapi >= 0.52.0, < 0.53.0",
+        "pydantic >= 1.4, < 1.5",
         "passlib",
         "python-dateutil",
         "python-multipart",
@@ -30,7 +31,6 @@ setup(
             "pytest",
             "pytest-cov",
             "pytest-env",
-            "pytest-dotenv",
             "pytest-mock",
             "requests",
             "flake8",

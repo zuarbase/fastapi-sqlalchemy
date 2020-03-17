@@ -1,13 +1,15 @@
 """ Generic middleware """
 import logging
+from typing import Union
 
 import jwt
-
+from sqlalchemy.engine import Connectable
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
+from fastapi_sqlalchemy import db_registry
 from .models import Session
 
 
@@ -39,6 +41,16 @@ class SessionMiddleware(BaseHTTPMiddleware):
     """
     Class-based version of session_middleware
     """
+    def __init__(
+            self,
+            app: ASGIApp,
+            bind: Union[str, Connectable],
+            **engine_kwargs
+    ):
+        super().__init__(app)
+        bind = db_registry.register(bind, **engine_kwargs)
+        Session.configure(bind=bind)
+
     async def dispatch(
             self,
             request: Request,

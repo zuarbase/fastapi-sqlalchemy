@@ -1,6 +1,6 @@
 """ Extensions to pydantic.types """
 from fastapi.params import Query
-from pydantic.types import ConstrainedInt
+from pydantic import ConstrainedInt
 
 
 class NonNegativeInt(ConstrainedInt):
