@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import UUID
 
 import sqlalchemy
+from sqlalchemy.orm import Session
 from sqlalchemy.types import CHAR
 from pydantic import BaseModel
 from pydantic.types import (  # pylint: disable=no-name-in-module
@@ -59,14 +60,14 @@ class PersonResponseModel(PersonRequestModel):
     updated_at: datetime
 
 
-def load_people():
-    session = models.Session()
-
+def load_people(session: Session):
     people = []
     for data in PEOPLE_DATA:
         person = Person(**data)
-        session.add(person)
         people.append(person)
 
+    session.add_all(people)
     session.commit()
-    return [session.merge(person) for person in people]
+
+    assert len(people) == len(PEOPLE_DATA)
+    return people

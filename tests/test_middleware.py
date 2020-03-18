@@ -41,3 +41,17 @@ def test_middleware_jwt(session, app, client):
     res = client.get("/payload", cookies={"jwt": token})
     assert res.status_code == 200
     assert res.json() == payload
+
+
+def test_middleware_session(engine, app, client):
+    app.add_middleware(middleware.SessionMiddleware, bind=engine)
+
+    @app.get("/session")
+    def _get(request: Request):
+        session = request.state.session
+        result = session.execute("SELECT 1").scalar()
+        return str(result)
+
+    response = client.get("/session")
+    assert response.status_code == 200
+    assert response.json() == "1"

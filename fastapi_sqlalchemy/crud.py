@@ -3,8 +3,7 @@ from uuid import UUID
 from typing import List, Dict, Any
 
 import sqlalchemy.exc
-from pydantic import BaseModel
-from pydantic.types import PositiveInt  # pylint: disable=no-name-in-module
+from pydantic import BaseModel, PositiveInt
 from starlette.exceptions import HTTPException
 from starlette.concurrency import run_in_threadpool
 

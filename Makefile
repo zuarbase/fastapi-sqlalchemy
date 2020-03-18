@@ -26,6 +26,10 @@ test:
 	pytest -xvv tests
 .PHONY: test
 
+coverage:
+	pytest --cov=fastapi_sqlalchemy --cov-report=term-missing --cov-fail-under=100 tests/
+.PHONY: coverage
+
 pyenv:
 	virtualenv -p python3 pyenv
 	pyenv/bin/pip install -e .[dev,prod]

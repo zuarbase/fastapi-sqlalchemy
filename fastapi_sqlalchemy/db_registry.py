@@ -8,7 +8,7 @@ NOTE: there are both thread-safe and non thread-safe functions.
 import typing
 import threading
 
-from sqlalchemy.engine import Engine, create_engine
+from sqlalchemy.engine import Connectable, Engine, create_engine
 
 __LOCK = threading.Lock()
 
@@ -16,7 +16,7 @@ __ENGINE_REGISTRY: typing.Dict[str, Engine] = {}
 
 
 def register(
-        bind: typing.Union[str, Engine],
+        bind: typing.Union[str, Connectable],
         pool_pre_ping=True,
         **engine_kwargs
 ) -> Engine:
@@ -24,11 +24,12 @@ def register(
     if isinstance(bind, str):
         engine = create_engine(
             bind, pool_pre_ping=pool_pre_ping, **engine_kwargs)
+        bind = engine
     else:
-        engine = bind
+        engine = bind.engine
 
     __ENGINE_REGISTRY[str(engine.url)] = engine
-    return engine
+    return bind
 
 
 def get_or_create(

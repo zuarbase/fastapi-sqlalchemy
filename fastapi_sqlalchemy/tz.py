@@ -1,4 +1,4 @@
-"""
+"""header_prefix
 This is a helper module to deal with datetime objects across mitto package
 corrent way of importing:
 >>> from mews import tz

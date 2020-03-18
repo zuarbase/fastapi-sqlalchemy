@@ -11,7 +11,8 @@ Full-stack, asynchronous Python3 framework.
 from starlette.requests import Request
 
 from fastapi_sqlalchemy import FastAPI_SQLAlchemy, crud
-from fastapi_sqlalchemy.models import BASE, User
+from fastapi_sqlalchemy.middleware import SessionMiddleware
+from fastapi_sqlalchemy.models import User
 
 # Define our model
 class MyUser(User):
@@ -19,7 +20,10 @@ class MyUser(User):
     
 
 # Instantiate the application
-app = FastAPI_SQLAlchemy("sqlite:///sqlite.db?check_same_thread=False")
+app = FastAPI_SQLAlchemy()
+app.add_middleware(SessionMiddleware)
+
+app.set_bind("sqlite:///sqlite.db?check_same_thread=False")
 app.create_all()
 
 # Load some data

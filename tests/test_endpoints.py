@@ -1,8 +1,10 @@
-from starlette.requests import Request
+import pytest
 
 from fastapi import Depends
-from fastapi_sqlalchemy import crud, utils
+from starlette.requests import Request
 
+from fastapi_sqlalchemy import crud, utils
+from fastapi_sqlalchemy.middleware import SessionMiddleware
 
 from .people import (
     Person,
@@ -10,6 +12,12 @@ from .people import (
     PersonResponseModel,
     PEOPLE_DATA
 )
+
+
+@pytest.fixture(autouse=True)
+def fixture_session_middleware(engine, app):
+    """Add SessionMiddleware automatically."""
+    app.add_middleware(SessionMiddleware, bind=engine)
 
 
 def test_endpoint(session, app, client):
