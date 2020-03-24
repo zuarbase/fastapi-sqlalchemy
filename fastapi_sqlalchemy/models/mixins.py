@@ -1,13 +1,12 @@
 """ Model mixins """
 import uuid
-import enum
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declared_attr
 
 from fastapi_sqlalchemy import tz
 from .types import GUID
-from .base import Session
+from .base import Session, model_as_dict
 
 
 class GuidMixin:
@@ -52,19 +51,10 @@ class TimestampMixin:
 
 class DictMixin:
     """ Mixin to add as_dict() """
-    def as_dict(self):
+
+    def as_dict(self) -> dict:
         """ Convert object to dictionary """
-        result = {}
-        for attr in sqlalchemy.inspect(self).mapper.column_attrs:
-            value = getattr(self, attr.key)
-            if isinstance(value, (tz.datetime, tz.date)):
-                value = value.isoformat()
-            elif isinstance(value, uuid.UUID):
-                value = str(value)
-            elif isinstance(value, enum.Enum):
-                value = value.name
-            result[attr.key] = value
-        return result
+        return model_as_dict(self)
 
 
 class ConfirmationMixin:

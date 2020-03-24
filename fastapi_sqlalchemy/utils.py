@@ -1,6 +1,7 @@
 """ Utility functions """
 from string import Template
 import uuid
+from typing import Union
 
 import jwt
 
@@ -9,17 +10,16 @@ from starlette.requests import Request
 
 try:
     from ordered_uuid import OrderedUUID
-    HAVE_ORDERED_UUID = True
 except ImportError:
-    HAVE_ORDERED_UUID = False
+    OrderedUUID = None
 
 
-def ordered_uuid(value=None):
+def ordered_uuid(value=None) -> OrderedUUID:
     """ Generate a rearranged uuid1 that is ordered by time.
     This is a more efficient for use as a primary key, see:
     https://www.percona.com/blog/2014/12/19/store-uuid-optimized-way/
     """
-    if not HAVE_ORDERED_UUID:
+    if OrderedUUID is None:
         raise RuntimeError("ordered_uuid package: not found")
     if not value:
         value = str(uuid.uuid1())
@@ -27,7 +27,7 @@ def ordered_uuid(value=None):
 
 
 def render(
-        path_or_template: str,
+        path_or_template: Union[str, Template],
         **kwargs,
 ) -> str:
     """ Render the specified template - either a file or the actual template """
@@ -49,7 +49,7 @@ def get_session(request: Request):
     return request.state.session
 
 
-def jwt_encode(payload, secret, algorithm="HS256"):
+def jwt_encode(payload: dict, secret: str, algorithm="HS256") -> str:
     """ Encode the given payload as a JWT """
     assert "exp" in payload
     return jwt.encode(

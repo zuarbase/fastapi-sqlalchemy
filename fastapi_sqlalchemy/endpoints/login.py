@@ -76,10 +76,9 @@ class LoginEndpoint:
             session: models.Session,
             username: str,
             password: str,
-            **kwargs
+            **kwargs  # pylint: disable=unused-argument
     ) -> Optional[dict]:
         """ Perform authentication against database """
-        # pylint: disable=unused-argument
 
         def _get_by_username():
             return self.user_cls.get_by_username(session, username)
@@ -130,13 +129,10 @@ class LoginEndpoint:
         result = await self.payload(user_data)
 
         expiry = tz.utcnow() + tz.timedelta(seconds=self.token_expiry)
-
-        # jwt_encode will convert this to an epoch inside the token
-        result["exp"] = expiry
+        result["exp"] = expiry.isoformat()
 
         token = await self.jwt_encode(result)
         result["token"] = token
-        result["exp"] = expiry.isoformat()
 
         headers = {"location": location or self.location}
         response = JSONResponse(

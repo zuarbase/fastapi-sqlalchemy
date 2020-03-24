@@ -8,8 +8,7 @@ Full-stack, asynchronous Python3 framework.
 ## Getting started
 
 ```python
-from fastapi import FastAPI
-from starlette.requests import Request
+from fastapi import FastAPI, Request
 
 from fastapi_sqlalchemy import crud, db_registry
 from fastapi_sqlalchemy.middleware import SessionMiddleware
@@ -61,7 +60,7 @@ curl -s localhost:8000/users | jq .
 The output should contain a list of 4 users,
 each with the attributes `id`, `username`, `updated_at` and `created_at`.
  
- <aside class="warning">
- NOTE: Sqlite3 really doesn't like multiple threads using the same connection (hence <i>check_same_thread=False</i>).
- In this case, it's safe but in production a different database should be used.
- </aside>
+<aside class="warning">
+NOTE: Sqlite3 really doesn't like multiple threads using the same connection (hence <i>check_same_thread=False</i>).
+In this case, it's safe but in production a different database should be used.
+</aside>

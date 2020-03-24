@@ -1,6 +1,6 @@
 """ Generic middleware """
 import logging
-from typing import Union
+from typing import Union, Sequence
 
 import jwt
 from sqlalchemy.engine import Connectable
@@ -10,7 +10,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
 from fastapi_sqlalchemy import db_registry
-from .models import Session
+from fastapi_sqlalchemy.models import Session
 
 
 PAYLOAD_HEADER_PREFIX = "x-payload-"
@@ -18,28 +18,14 @@ PAYLOAD_HEADER_PREFIX = "x-payload-"
 logger = logging.getLogger(__name__)
 
 
-async def session_middleware(request: Request, call_next):
-    """
-    Close the session after each request, thus rolling back any
-    not committed transactions.  The session is also stored as part
-    of the request via request.state.session.
-    """
-    added = False
-    try:
-        if not hasattr(request.state, "session"):
-            request.state.session = Session()
-            added = True
-        response = await call_next(request)
-    finally:
-        if added:
-            # Only close a session if we added it, useful for testing
-            request.state.session.close()
-    return response
-
-
 class SessionMiddleware(BaseHTTPMiddleware):
-    """
-    Class-based version of session_middleware
+    """Add a `models.Session` instance to `request.state.session`.
+
+    Close the session after each request, thus rolling back any
+    not committed transactions.
+
+    Given bind will be added to `fastapi_sqlalchemy.db_registry` and so can be
+    accessed from there.
     """
     def __init__(
             self,
@@ -56,19 +42,34 @@ class SessionMiddleware(BaseHTTPMiddleware):
             request: Request,
             call_next
     ) -> Response:
-        return await session_middleware(request, call_next)
+        added = False
+        try:
+            if not hasattr(request.state, "session"):
+                request.state.session = Session()
+                added = True
+            response = await call_next(request)
+        finally:
+            if added:
+                # Only close a session if we added it, useful for testing
+                request.state.session.close()
+        return response
 
 
 class UpstreamPayloadMiddleware(BaseHTTPMiddleware):
-    """ Set payload from upstream request headers.
+    """Parse upstream request headers and set the result to
+    `request.state.payload`.
+
     NOTE: there must be an upstream service (like an API Gateway) to
     ensure these headers are trusted.  Otherwise the client could set
     any desired permissions.
     """
+
+    PAYLOAD_HEADER_PREFIX = PAYLOAD_HEADER_PREFIX
+
     def __init__(
             self,
             app: ASGIApp,
-            header_prefix=PAYLOAD_HEADER_PREFIX,
+            header_prefix: str = PAYLOAD_HEADER_PREFIX,
     ):
         super().__init__(app=app)
         self.header_prefix = header_prefix
@@ -85,33 +86,32 @@ class UpstreamPayloadMiddleware(BaseHTTPMiddleware):
                 value = request.headers.getlist(header_name)
                 if len(value) == 1:
                     payload[name] = value[0]
-                else:
+                else:  # pragma: nocover
                     payload[name] = value
         request.state.payload = payload
         return await call_next(request)
 
 
 class JwtMiddleware(BaseHTTPMiddleware):
-    """ Middleware to decode a JWT (if present)
-    and add the results to request.state.payload
-    """
+    """Decode a JWT token from cookies (if present) and add the results to
+    `request.state.payload`."""
+
     def __init__(
             self,
             app: ASGIApp,
             secret: str,
             cookie_name: str = "jwt",
-            algorithms=None,
+            algorithms: Sequence[str] = ("HS256", "HS512"),
             **kwargs,
     ):
         super().__init__(app=app)
         self.secret = secret
         self.cookie_name = cookie_name
-        self.algorithms = algorithms or ["HS256", "HS512"]
+        self.algorithms = algorithms
         self.kwargs = kwargs
 
     async def dispatch(
-            self, request: Request,
-            call_next
+            self, request: Request, call_next
     ) -> Response:
         token = request.cookies.get(self.cookie_name)
         if token:

@@ -18,17 +18,7 @@ class Base:
 
     def as_dict(self):
         """ Convert object to dictionary """
-        result = {}
-        for attr in sqlalchemy.inspect(self).mapper.column_attrs:
-            value = getattr(self, attr.key)
-            if isinstance(value, (tz.datetime, tz.date)):
-                value = value.isoformat()
-            elif isinstance(value, uuid.UUID):
-                value = str(value)
-            elif isinstance(value, enum.Enum):
-                value = value.name
-            result[attr.key] = value
-        return result
+        return model_as_dict(self)
 
 
 BASE = declarative_base(cls=Base)
@@ -56,3 +46,18 @@ class ModelMapping(dict):
 
 
 MODEL_MAPPING = ModelMapping()
+
+
+def model_as_dict(model) -> dict:
+    """Convert given sqlalchemy model to dict (relationships not included)."""
+    result = {}
+    for attr in sqlalchemy.inspect(model).mapper.column_attrs:
+        value = getattr(model, attr.key)
+        if isinstance(value, (tz.datetime, tz.date)):
+            value = value.isoformat()
+        elif isinstance(value, uuid.UUID):
+            value = str(value)
+        elif isinstance(value, enum.Enum):
+            value = value.name
+        result[attr.key] = value
+    return result
