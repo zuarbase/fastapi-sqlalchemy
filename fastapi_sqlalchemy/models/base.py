@@ -6,9 +6,7 @@ from collections import Mapping
 import sqlalchemy
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import (
-    sessionmaker,
-)
+from sqlalchemy.orm import sessionmaker
 
 from fastapi_sqlalchemy import tz
 

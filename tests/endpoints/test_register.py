@@ -265,7 +265,7 @@ def test_send_email_confirmation(mocker):
     )
     send_message = mocker.patch.object(endpoint, "send_message")
 
-    base_url = "http://local.zuar.com/"
+    base_url = "http://local.example.com/"
     email = "recipient2@example.com"
     confirmation_url = base_url + endpoint.confirm_url + URLSafeTimedSerializer(
         endpoint.secret).dumps(email, salt=endpoint.salt)
@@ -296,7 +296,7 @@ def test_send_email_confirmation_fail(mocker):
         endpoint, "send_message", side_effect=Exception)
 
     endpoint.send_email_confirmation(
-        base_url="http://local.zuar.com/",
+        base_url="http://local.example.com/",
         email="recipient2@example.com"
     )
     assert send_message.called

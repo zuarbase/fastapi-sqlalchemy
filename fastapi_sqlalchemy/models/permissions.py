@@ -7,7 +7,7 @@ from . import mixins
 
 
 class Permission(BASE, mixins.GuidMixin, mixins.TimestampMixin):
-    """ The groups table """
+    """ The permissions table """
     __tablename__ = "permissions"
     __abstract__ = True
 

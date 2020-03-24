@@ -65,7 +65,7 @@ def test_confirm_user_not_found(session, app, client):
         User, secret="s0secret", template="<${error}"
     )
 
-    nonexistent_email = "nonexistent@local.zuar.com"
+    nonexistent_email = "nonexistent@local.example.com"
     token_ = URLSafeTimedSerializer(
         "s0secret").dumps(nonexistent_email, salt=None)
 

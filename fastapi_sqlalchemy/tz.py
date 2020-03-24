@@ -4,7 +4,7 @@ This is a helper module to deal with datetime and timezones.
 For convenience datetime related modules (e.g. dateutil.parser, pytz, etc) are
 imported here so they can be accessed using this module.
 
-Uage:
+Usage:
 >>> from fastapi_sqlalchemy import tz
 >>> dt1 = tz.utcnow()
 >>> dt2 = tz.utcdatetime(2015, 1, 2, 1, 2, 3)

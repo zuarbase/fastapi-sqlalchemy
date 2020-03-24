@@ -67,7 +67,7 @@ def test_middleware_session(engine, app, client):
     app.add_middleware(middleware.SessionMiddleware, bind=engine)
 
     @app.get("/session")
-    def _get(request: Request, session = Depends(utils.get_session)):
+    def _get(request: Request, session=Depends(utils.get_session)):
         assert request.state.session is session
 
         result = session.execute("SELECT 1").scalar()

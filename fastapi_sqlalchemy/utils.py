@@ -1,12 +1,11 @@
 """ Utility functions """
-from string import Template
 import uuid
+
+from string import Template
 from typing import Union
 
 import jwt
-
 from starlette.requests import Request
-
 
 try:
     from ordered_uuid import OrderedUUID
@@ -43,13 +42,16 @@ def render(
 
 
 def get_session(request: Request):
-    """ Get Session from a request
-    usage: session = Depends(get_session)
+    """Get `request.state.session`
+
+    Usage:
+        >>> from fastapi import Depends
+        >>> session = Depends(get_session)
     """
     return request.state.session
 
 
-def jwt_encode(payload: dict, secret: str, algorithm="HS256") -> str:
+def jwt_encode(payload: dict, secret: str, algorithm: str = "HS256") -> str:
     """ Encode the given payload as a JWT """
     assert "exp" in payload
     return jwt.encode(
