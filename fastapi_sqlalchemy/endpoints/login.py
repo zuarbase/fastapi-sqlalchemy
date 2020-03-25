@@ -129,10 +129,13 @@ class LoginEndpoint:
         result = await self.payload(user_data)
 
         expiry = tz.utcnow() + tz.timedelta(seconds=self.token_expiry)
-        result["exp"] = expiry.isoformat()
+
+        # jwt_encode will convert this to an epoch inside the token
+        result["exp"] = expiry
 
         token = await self.jwt_encode(result)
         result["token"] = token
+        result["exp"] = expiry.isoformat()
 
         headers = {"location": location or self.location}
         response = JSONResponse(

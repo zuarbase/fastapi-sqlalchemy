@@ -42,12 +42,11 @@ def test_login_post(mocker, engine, session, app, client):
     ):
         return await endpoint.on_post(session, username, password)
 
-    expected_exp = now_dt + timedelta(seconds=endpoint.token_expiry)
-    expected_exp = expected_exp.isoformat()
+    expiry = now_dt + timedelta(seconds=endpoint.token_expiry)
 
     expected_data = {
         **user.as_dict(),
-        "exp": expected_exp,
+        "exp": expiry,
     }
     expected_token = jwt.encode(
         expected_data,
@@ -69,6 +68,7 @@ def test_login_post(mocker, engine, session, app, client):
     ]
     assert res.json() == {
         **expected_data,
+        "exp": expiry.isoformat(),
         "token": expected_token
     }
 
