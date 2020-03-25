@@ -1,20 +1,16 @@
 """ authentication and authorization """
 import logging
-import asyncio
-import inspect
-import functools
-import typing
+from typing import Dict, List, Optional, Tuple
 
-from starlette.exceptions import HTTPException
-from starlette.requests import HTTPConnection, Request
-from starlette.responses import Response
-from starlette.concurrency import run_in_threadpool
-from starlette.websockets import WebSocket
-from starlette.responses import RedirectResponse
+from fastapi import Request
+from fastapi.security import SecurityScopes
+from fastapi import status
 from starlette.authentication import (
     AuthenticationBackend, AuthCredentials, SimpleUser
 )
-
+from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import HTTPException
+from starlette.requests import HTTPConnection
 
 ADMIN_SCOPE = "*"
 
@@ -33,46 +29,51 @@ class PayloadAuthBackend(AuthenticationBackend):
         self.user_cls = user_cls
         self.admin_scope = admin_scope
 
-    async def scopes(self, payload):
+    async def scopes(self, payload: Dict[str, str]) -> List[str]:
         """ Return the list of scopes """
-        scopes = []
         if "scopes" in payload:
             scopes = payload["scopes"]
         elif "permissions" in payload:
             scopes = payload["permissions"]
+        else:
+            return []
 
         if isinstance(scopes, str):
             scopes = [scopes]
+
+        if self.admin_scope and self.admin_scope in scopes:
+            return [self.admin_scope]
 
         result = []
         for scope in scopes:
             result.extend([token.strip() for token in scope.split(",")])
 
-        if self.admin_scope and self.admin_scope in scopes:
-            return [self.admin_scope]
-
         return result
 
     async def authenticate(
-            self,
-            conn: HTTPConnection
-    ):
-        payload = getattr(conn.state, "payload", None)
-        if not payload:
-            return
+            self, conn: HTTPConnection
+    ) -> Optional[Tuple["AuthCredentials", "BaseUser"]]:
+        try:
+            payload = conn.state.payload
+        except AttributeError:
+            raise RuntimeError(
+                "Missing 'request.state.payload': "
+                "try adding 'middleware.UpstreamPayloadMiddleware'"
+            )
 
         username = payload.get("username")
         if not username:
             return
 
-        try:
-            session = conn.state.session
-        except AttributeError:
-            raise RuntimeError(
-                "Missing session: try adding SessionMiddleware."
-            )
-
         if self.user_cls:
+            try:
+                session = conn.state.session
+            except AttributeError:
+                raise RuntimeError(
+                    "Missing 'request.state.session': "
+                    "try adding 'middleware.SessionMiddleware'"
+                )
+
             user = await run_in_threadpool(
                 self.user_cls.get_by_username, session, username
             )
@@ -86,151 +87,43 @@ class PayloadAuthBackend(AuthenticationBackend):
         return AuthCredentials(scopes), user
 
 
-def _requires(
-        test_conn: typing.Callable,
-        status_code: int = 403,
-        redirect: str = None
-) -> typing.Callable:
-    """ starlette.authentication.requires """
+def validate_authenticated(request: Request):
+    """Validate that 'request.user' is authenticated.
 
-    def _getarg(args, idx):
-        return args[idx] if idx < len(args) else None
-
-    def decorator(func: typing.Callable) -> typing.Callable:
-        sig = inspect.signature(func)
-
-        idx = -1
-        for idx, parameter in enumerate(sig.parameters.values()):
-            if parameter.name == "request" or parameter.name == "websocket":
-                parameter_type = parameter.name
-                break
-        else:
-            raise Exception(
-                f'No "request" or "websocket" argument on function "{func}"'
-            )
-
-        if parameter_type == "websocket":
-            # Handle websocket functions. (Always async)
-            @functools.wraps(func)
-            async def websocket_wrapper(
-                    *args: typing.Any,
-                    **kwargs: typing.Any
-            ) -> None:
-                websocket = kwargs.get("websocket", _getarg(args, idx))
-                assert isinstance(websocket, WebSocket)
-
-                if not test_conn(websocket):
-                    await websocket.close()
-                else:
-                    await func(*args, **kwargs)
-
-            return websocket_wrapper
-
-        if asyncio.iscoroutinefunction(func):
-            # Handle async request/response functions.
-            @functools.wraps(func)
-            async def async_wrapper(
-                    *args: typing.Any,
-                    **kwargs: typing.Any
-            ) -> Response:
-                print(kwargs)
-                request = kwargs.get("request", _getarg(args, idx))
-                assert isinstance(request, Request)
-
-                if not test_conn(request):
-                    if redirect is not None:
-                        return RedirectResponse(url=request.url_for(redirect))
-                    raise HTTPException(status_code=status_code)
-                return await func(*args, **kwargs)
-
-            return async_wrapper
-
-        # Handle sync request/response functions.
-        @functools.wraps(func)
-        def sync_wrapper(
-                *args: typing.Any,
-                **kwargs: typing.Any
-        ) -> Response:
-            request = kwargs.get("request", _getarg(args, idx))
-            assert isinstance(request, Request)
-
-            if not test_conn(request):
-                if redirect is not None:
-                    return RedirectResponse(url=request.url_for(redirect))
-                raise HTTPException(status_code=status_code)
-            return func(*args, **kwargs)
-
-        return sync_wrapper
-
-    return decorator
+    Usage:
+        >>> from fastapi import Depends
+        >>> @app.get("/my_name", dependencies=[
+        ...    Depends(validate_authenticated)
+        ... ])
+    """
+    user: SimpleUser = getattr(request, "user", None)
+    if user is not None and not user.is_authenticated:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
 
-def requires_any(
-        scopes: typing.Union[str, typing.Sequence[str]],
-        status_code: int = 403,
-        redirect: str = None,
-        admin_scope: str = ADMIN_SCOPE,
-) -> typing.Callable:
-    """ Any specified scope is allowed (or admin) """
-    scopes_list = [scopes] if isinstance(scopes, str) else list(scopes)
+def validate_all_scopes(request: Request, scopes: SecurityScopes):
+    """Validate that all defined scopes exist in 'request.auth.scopes'.
 
-    def _has_any_scope(conn: HTTPConnection) -> bool:
-        """ Test if all scopes are present (or admin) """
-        if not conn.user.is_authenticated:
-            return False
-        if admin_scope and admin_scope in conn.auth.scopes:
-            return True
-        for scope in scopes_list:
-            if scope in conn.auth.scopes:
-                return True
-        return False
-
-    return _requires(
-        _has_any_scope, status_code=status_code, redirect=redirect
-    )
+    Usage:
+        >>> from fastapi import Security
+        >>> @app.get("/my_name", dependencies=[
+        ...    Security(validate_all_scopes, scopes=["read", "write"])
+        ... ])
+    """
+    req_scopes = request.auth.scopes
+    if not all(scope in req_scopes for scope in scopes.scopes):
+        raise HTTPException(status.HTTP_403_FORBIDDEN)
 
 
-def requires_all(
-        scopes: typing.Union[str, typing.Sequence[str]],
-        status_code: int = 403,
-        redirect: str = None,
-        admin_scope: str = ADMIN_SCOPE,
-) -> typing.Callable:
-    """ All specified scopes are required (or admin) """
-    scopes_list = [scopes] if isinstance(scopes, str) else list(scopes)
+def validate_any_scope(request: Request, scopes: SecurityScopes):
+    """Validate that at least one defined scope exists in 'request.auth.scopes'.
 
-    def _has_all_scopes(conn: HTTPConnection) -> bool:
-        if not conn.user.is_authenticated:
-            return False
-        if admin_scope and admin_scope in conn.auth.scopes:
-            return True
-        for scope in scopes_list:
-            if scope not in conn.auth.scopes:
-                return False
-        return True
-
-    return _requires(
-        _has_all_scopes, status_code=status_code, redirect=redirect
-    )
-
-
-def requires_admin(
-        status_code: int = 403,
-        redirect: str = None,
-        admin_scope: str = ADMIN_SCOPE,
-) -> typing.Callable:
-    """ Requires the admin scope """
-    return requires_any(
-        [], status_code=status_code, redirect=redirect, admin_scope=admin_scope
-    )
-
-
-def authenticated(
-        status_code: int = 403,
-        redirect: str = None,
-        admin_scope: str = ADMIN_SCOPE,
-) -> typing.Callable:
-    """ Requires the admin scope """
-    return requires_all(
-        [], status_code=status_code, redirect=redirect, admin_scope=admin_scope
-    )
+    Usage:
+        >>> from fastapi import Security
+        >>> @app.get("/my_name", dependencies=[
+        ...    Security(validate_any_scope, scopes=["read", "write"])
+        ... ])
+    """
+    req_scopes = request.auth.scopes
+    if not any(scope in req_scopes for scope in scopes.scopes):
+        raise HTTPException(status.HTTP_403_FORBIDDEN)

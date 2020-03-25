@@ -76,10 +76,9 @@ class LoginEndpoint:
             session: models.Session,
             username: str,
             password: str,
-            **kwargs
+            **kwargs  # pylint: disable=unused-argument
     ) -> Optional[dict]:
         """ Perform authentication against database """
-        # pylint: disable=unused-argument
 
         def _get_by_username():
             return self.user_cls.get_by_username(session, username)

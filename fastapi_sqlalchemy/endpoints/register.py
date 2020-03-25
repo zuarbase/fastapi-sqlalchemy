@@ -9,11 +9,11 @@ from email.message import EmailMessage
 
 import sqlalchemy.exc
 from itsdangerous import URLSafeTimedSerializer
+from pydantic import EmailStr
 
 from starlette.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
 
-from fastapi import HTTPException
 from fastapi_sqlalchemy import models, utils
 
 logger = logging.getLogger(__name__)
@@ -117,21 +117,6 @@ class RegisterEndpoint:
         return serializer.dumps(email, salt=self.salt)
 
     @staticmethod
-    def validate_and_format_email(email):
-        """ Confirm the email is acceptable and translate as needed. """
-        if "@" not in email:
-            raise HTTPException(
-                status_code=400, detail="Invalid email: missing '@'."
-            )
-
-        name, domain = email.split("@", 1)
-
-        # name is case sensitive, but domain is case-insensitive.
-        domain = domain.lower()
-
-        return name + "@" + domain
-
-    @staticmethod
     def validate_password(password):
         """ Validate the password format is acceptable """
         if password and len(password) >= 7:
@@ -190,14 +175,15 @@ class RegisterEndpoint:
             subtype="html"
         )
 
-        # pylint: disable=bare-except
         try:
             self.send_message(msg)
             logger.info(
                 "Email sent to %s with confirm URL: %s", email, confirm_url
             )
+        # pylint: disable=bare-except
         except:  # noqa
             logging.exception("EMAIL FAILED TO SEND: %s", email)
+        # pylint: enable=bare-except
 
     async def on_post(
             self,
@@ -211,7 +197,7 @@ class RegisterEndpoint:
     ) -> HTMLResponse:
         """ Handle POST requests """
 
-        email = self.validate_and_format_email(email)
+        email = EmailStr.validate(email)
 
         def _register() -> (int, str):
 
@@ -219,6 +205,7 @@ class RegisterEndpoint:
                 self.validate_password(password)
             except ValueError as ex:
                 return 400, self.render_form(error=str(ex), **kwargs)
+
             if confirm_password is not None:
                 # The only way for confirm_password to be None is if a
                 # standard form doesn't include it, otherwise the value is ""
@@ -252,6 +239,7 @@ class RegisterEndpoint:
             try:
                 session.commit()
             except sqlalchemy.exc.IntegrityError:
+                # pragma: no-cover
                 return 409, self.render_form(
                     error="That username already exists.", **kwargs
                 )

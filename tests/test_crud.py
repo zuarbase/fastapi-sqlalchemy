@@ -9,7 +9,9 @@ from starlette.exceptions import HTTPException
 from fastapi_sqlalchemy import crud
 from fastapi_sqlalchemy.types import NonNegativeInt
 
-from .people import load_people, Person, PersonRequestModel, PEOPLE_DATA
+from tests.data.people import (
+    load_people, Person, PersonRequestModel, PEOPLE_DATA
+)
 
 
 @pytest.fixture(name="mock_sqlalchemy_filters")

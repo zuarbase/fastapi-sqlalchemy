@@ -2,11 +2,10 @@
 import uuid
 import json
 
-import sqlalchemy
 from sqlalchemy.ext.mutable import MutableDict
 
 from sqlalchemy.sql import operators
-from sqlalchemy.types import TypeDecorator, CHAR, TEXT
+from sqlalchemy.types import String, TypeDecorator, CHAR, TEXT
 from sqlalchemy.dialects.postgresql import UUID
 
 
@@ -22,13 +21,11 @@ class GUID(TypeDecorator):
     impl = CHAR
 
     def load_dialect_impl(self, dialect):
-        """ see sqlalchemy.types.TypeDecorator.load_dialect_impl """
         if dialect.name == "postgresql":
             return dialect.type_descriptor(UUID())
         return dialect.type_descriptor(CHAR(32))
 
     def process_bind_param(self, value, dialect):
-        """ see sqlalchemy.types.TypeDecorator.process_bind_param """
         if value is None:
             return value
         if dialect.name == "postgresql":
@@ -39,7 +36,6 @@ class GUID(TypeDecorator):
         return "%.32x" % value.int
 
     def process_result_value(self, value, dialect):
-        """ see sqlalchemy.types.TypeDecorator.process_result_value """
         if value is None:
             return value
         if not isinstance(value, uuid.UUID):
@@ -47,12 +43,10 @@ class GUID(TypeDecorator):
         return value
 
     def process_literal_param(self, value, dialect):
-        """ see sqlalchemy.types.TypeDecorator.process_literal_param """
         raise NotImplementedError()
 
     @property
     def python_type(self):
-        """ see sqlalchemy.types.TypeDecorator.process_literal_param """
         raise NotImplementedError()
 
 
@@ -62,9 +56,14 @@ class JSONEncodedDict(TypeDecorator):
 
     impl = TEXT
 
+    _OPERATORS_FOR_STR = (
+        operators.like_op,
+        operators.notlike_op,
+    )
+
     def coerce_compared_value(self, op, value):
-        if op in (operators.like_op, operators.notlike_op):
-            return sqlalchemy.String()
+        if op in self._OPERATORS_FOR_STR:
+            return String()
         return self
 
     def process_bind_param(self, value, dialect):
@@ -79,12 +78,10 @@ class JSONEncodedDict(TypeDecorator):
         return value
 
     def process_literal_param(self, value, dialect):
-        """ see sqlalchemy.types.TypeDecorator.process_literal_param """
         raise NotImplementedError()
 
     @property
     def python_type(self):
-        """ see sqlalchemy.types.TypeDecorator.process_literal_param """
         raise NotImplementedError()
 
 

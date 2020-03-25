@@ -1,8 +1,9 @@
 import jwt
+from fastapi import Depends
 
 from starlette.requests import Request
 
-from fastapi_sqlalchemy import middleware
+from fastapi_sqlalchemy import middleware, utils
 
 
 def test_middleware_upstream(session, app, client):
@@ -43,12 +44,32 @@ def test_middleware_jwt(session, app, client):
     assert res.json() == payload
 
 
+def test_middleware_jwt_bad_or_no_token(session, app, client):
+    @app.get("/jwt")
+    async def _get(request: Request):
+        return {"has_payload": hasattr(request.state, "payload")}
+
+    secret = "s0secret"
+    app.add_middleware(middleware.JwtMiddleware, secret=secret)
+
+    # Test bad token
+    res = client.get("/jwt", cookies={"jwt": "bad-jwt-token"})
+    assert res.status_code == 200
+    assert res.json() == {"has_payload": False}
+
+    # Test without token
+    res = client.get("/jwt")
+    assert res.status_code == 200
+    assert res.json() == {"has_payload": False}
+
+
 def test_middleware_session(engine, app, client):
     app.add_middleware(middleware.SessionMiddleware, bind=engine)
 
     @app.get("/session")
-    def _get(request: Request):
-        session = request.state.session
+    def _get(request: Request, session=Depends(utils.get_session)):
+        assert request.state.session is session
+
         result = session.execute("SELECT 1").scalar()
         return str(result)
 

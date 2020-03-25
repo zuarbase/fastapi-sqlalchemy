@@ -33,7 +33,7 @@ def _after_configured():
             )
         if not group_cls:
             raise RuntimeError(
-                "'group_membership' association found, "
+                "'group_membership' association table found, "
                 "but no Group table defined."
             )
 
@@ -57,7 +57,7 @@ def _after_configured():
             )
         if not permission_cls:
             raise RuntimeError(
-                "'user_permissions' association found, "
+                "'user_permissions' association table found, "
                 "but no Permission table defined."
             )
 
@@ -76,12 +76,12 @@ def _after_configured():
     if group_permissions_table is not None:
         if not group_cls:
             raise RuntimeError(
-                "'groups_permissions' association table found, "
+                "'group_permissions' association table found, "
                 "but no Group table defined."
             )
         if not permission_cls:
             raise RuntimeError(
-                "'group_permissions' association found, "
+                "'group_permissions' association table found, "
                 "but no Permission table defined."
             )
 
@@ -109,8 +109,8 @@ def _after_configured():
                 .join(user_cls)
                 .filter(user_cls.id == user.id))
 
-    if user_cls and not hasattr(user_cls, "permissions"):
-        if user_permissions_table is not None and \
+    if user_cls and not hasattr(user_cls, "permissions") and \
+            user_permissions_table is not None and \
             group_permissions_table is not None and \
-                group_membership_table is not None:
-            user_cls.permissions = property(_permissions)
+            group_membership_table is not None:
+        user_cls.permissions = property(_permissions)
